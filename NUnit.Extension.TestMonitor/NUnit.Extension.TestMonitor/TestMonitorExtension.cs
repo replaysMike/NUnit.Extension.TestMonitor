@@ -18,10 +18,12 @@ namespace NUnit.Extension.TestMonitor
         private NamedPipeServerStream _serverStream;
         private StreamWriter _ipcWriter;
         private SemaphoreSlim _lock;
+        private RuntimeDetection _runtimeDetection;
 
         public TestMonitorExtension()
         {
             _lock = new SemaphoreSlim(1, 1);
+            _runtimeDetection = new RuntimeDetection();
             StartIpcServer();
         }
 
@@ -217,16 +219,18 @@ namespace NUnit.Extension.TestMonitor
             _ipcWriter = new StreamWriter(_serverStream);
         }
 
-        private void WriteEvent<T>(T data)
+        private void WriteEvent(DataEvent data)
         {
             _lock?.Wait();
             try
             {
+                data.Runtime = _runtimeDetection.DetectedRuntimeFramework.ToString();
+                var serializedString = JsonConvert.SerializeObject(data) + Environment.NewLine;
                 if (_serverStream.IsConnected)
-                {
-                    var serializedString = JsonConvert.SerializeObject(data);
-                    _ipcWriter.WriteLine(serializedString);
-                }
+                    _ipcWriter.Write(serializedString);
+                Console.WriteLine("STDOUT: TEST 123");
+                Console.Error.WriteLine("ERROR: TEST 123");
+                File.AppendAllText("C:\\logs\\test.log", serializedString);
             }
             finally
             {

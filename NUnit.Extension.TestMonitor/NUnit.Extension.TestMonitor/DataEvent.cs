@@ -4,6 +4,7 @@ namespace NUnit.Extension.TestMonitor
 {
     public class DataEvent
     {
+        public string Runtime { get; set; }
         public string EventName { get; }
         public string Id { get; set; }
         public string ParentId { get; set; }

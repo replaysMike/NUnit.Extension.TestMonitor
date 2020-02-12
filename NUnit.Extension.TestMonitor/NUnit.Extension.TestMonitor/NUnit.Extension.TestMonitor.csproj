@@ -19,4 +19,10 @@
     <PackageReference Include="NUnit.Engine" Version="3.10.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="NUnit.Extension.TestMonitor.addins">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
