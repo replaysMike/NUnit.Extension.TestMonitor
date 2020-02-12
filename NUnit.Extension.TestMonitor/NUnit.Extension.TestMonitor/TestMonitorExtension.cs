@@ -18,18 +18,27 @@ namespace NUnit.Extension.TestMonitor
         private NamedPipeServerStream _serverStream;
         private StreamWriter _ipcWriter;
         private SemaphoreSlim _lock;
-        private RuntimeDetection _runtimeDetection;
+        private ConfigurationResolver _configurationResolver;
+        private Configuration _configuration;
+
+        private StdOut StdOut { get; }
 
         public TestMonitorExtension()
         {
             _lock = new SemaphoreSlim(1, 1);
-            _runtimeDetection = new RuntimeDetection();
-            StartIpcServer();
+            _configurationResolver = new ConfigurationResolver(new RuntimeDetection());
+            _configuration = _configurationResolver.GetConfiguration();
+            if (_configuration.EventEmitType.HasFlag(EventEmitTypes.StdOut))
+                StdOut = new StdOut(_configuration.EventOutputStream);
+            else
+                StdOut = new StdOut(EventOutputStreams.None);
+            if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes))
+                StartIpcServer();
         }
 
         public void OnTestEvent(string report)
         {
-            Console.WriteLine($"Test event: {report}");
+            // StdOut.WriteLine($"Test event: {report}");
             var doc = new XmlDocument();
             doc.LoadXml(report);
             // we are only interested in specific events
@@ -69,7 +78,7 @@ namespace NUnit.Extension.TestMonitor
             switch (type)
             {
                 case "TestFixture":
-                    Console.WriteLine($"Testing Suite: {suiteName}");
+                    StdOut.WriteLine($"[StartSuite] {suiteName}");
                     WriteEvent(new DataEvent(EventNames.StartSuite)
                     {
                         Id = id,
@@ -93,7 +102,7 @@ namespace NUnit.Extension.TestMonitor
             switch (type)
             {
                 case "TestMethod":
-                    Console.WriteLine($"  - Running test: {name}");
+                    StdOut.WriteLine($"[StartTest] {name}");
                     WriteEvent(new DataEvent(EventNames.StartTest)
                     {
                         Id = id,
@@ -113,28 +122,23 @@ namespace NUnit.Extension.TestMonitor
             var parentId = entry.GetAttribute("parentId");
             var name = entry.GetAttribute("name");
             var fullName = entry.GetAttribute("fullname");
-            var type = entry.GetAttribute("type");
             var startTime = DateTime.Parse(entry.GetAttribute("start-time"));
             var endTime = DateTime.Parse(entry.GetAttribute("end-time"));
             var duration = TimeSpan.FromSeconds(double.Parse(entry.GetAttribute("duration")));
             var result = entry.GetAttribute("result") == "Passed" ? true : false;
-            switch (type)
+
+            StdOut.WriteLine($"[EndTest] '{name}' {(result ? "passed" : "failed")} in {duration}");
+            WriteEvent(new DataEvent(EventNames.EndTest)
             {
-                case "TestMethod":
-                    Console.WriteLine($" - Test '{name}' completed in {duration}");
-                    WriteEvent(new DataEvent(EventNames.EndTest)
-                    {
-                        Id = id,
-                        ParentId = parentId,
-                        TestName = name,
-                        FullName = fullName,
-                        StartTime = startTime,
-                        EndTime = endTime,
-                        Duration = duration,
-                        TestResult = result,
-                    });
-                    break;
-            }
+                Id = id,
+                ParentId = parentId,
+                TestName = name,
+                FullName = fullName,
+                StartTime = startTime,
+                EndTime = endTime,
+                Duration = duration,
+                TestResult = result,
+            });
         }
 
         private void EndSuite(TestMonitorExtensionEventArgs e)
@@ -157,7 +161,7 @@ namespace NUnit.Extension.TestMonitor
             switch (type)
             {
                 case "TestMethod":
-                    Console.WriteLine($"Suite '{name}' completed in {duration}. {passed} passed {failed} failures");
+                    StdOut.WriteLine($"[EndSuite] '{name}' completed in {duration}. {passed} passed {failed} failures");
                     WriteEvent(new DataEvent(EventNames.EndSuite)
                     {
                         Id = id,
@@ -171,6 +175,7 @@ namespace NUnit.Extension.TestMonitor
                         Failed = failed,
                         Warnings = warnings,
                         Skipped = skipped,
+                        TestCount = totalTests,
                         Inconclusive = inconclusive
                     });
                     break;
@@ -192,7 +197,7 @@ namespace NUnit.Extension.TestMonitor
             var skipped = int.Parse(entry.GetAttribute("skipped"));
             var passed = int.Parse(entry.GetAttribute("passed"));
             var failed = int.Parse(entry.GetAttribute("failed"));
-            Console.WriteLine($"All tests completed in {duration}. {passed} passed {failed} failures");
+            StdOut.WriteLine($"[Report] All tests completed in {duration}. {passed} passed {failed} failures");
             WriteEvent(new DataEvent(EventNames.Report)
             {
                 Id = id,
@@ -224,13 +229,17 @@ namespace NUnit.Extension.TestMonitor
             _lock?.Wait();
             try
             {
-                data.Runtime = _runtimeDetection.DetectedRuntimeFramework.ToString();
+                data.Runtime = _configurationResolver.RuntimeDetection.DetectedRuntimeFramework.ToString();
                 var serializedString = JsonConvert.SerializeObject(data) + Environment.NewLine;
-                if (_serverStream.IsConnected)
+                // emit IPC/Named pipes
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes)
+                    && _ipcWriter != null
+                    && _serverStream.IsConnected)
                     _ipcWriter.Write(serializedString);
-                Console.WriteLine("STDOUT: TEST 123");
-                Console.Error.WriteLine("ERROR: TEST 123");
-                File.AppendAllText("C:\\logs\\test.log", serializedString);
+                // emit log
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile)
+                    && !string.IsNullOrEmpty(_configuration.EventsLogFile))
+                    File.AppendAllText(_configuration.EventsLogFile, serializedString);
             }
             finally
             {

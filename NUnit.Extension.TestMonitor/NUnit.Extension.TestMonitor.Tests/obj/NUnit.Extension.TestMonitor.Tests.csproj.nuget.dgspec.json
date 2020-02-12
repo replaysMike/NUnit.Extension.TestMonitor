@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\NUnit.Extension.TestMonitor.Tests.csproj": {}
+    "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\NUnit.Extension.TestMonitor.Tests.csproj": {}
   },
   "projects": {
-    "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\NUnit.Extension.TestMonitor.Tests.csproj": {
+    "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\NUnit.Extension.TestMonitor.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\NUnit.Extension.TestMonitor.Tests.csproj",
+        "projectUniqueName": "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\NUnit.Extension.TestMonitor.Tests.csproj",
         "projectName": "NUnit.Extension.TestMonitor.Tests",
-        "projectPath": "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\NUnit.Extension.TestMonitor.Tests.csproj",
+        "projectPath": "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\NUnit.Extension.TestMonitor.Tests.csproj",
         "packagesPath": "C:\\Users\\mikeb\\.nuget\\packages\\",
-        "outputPath": "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\obj\\",
+        "outputPath": "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.Tests\\obj\\",
         "projectStyle": "PackageReference",
         "crossTargeting": true,
         "fallbackFolders": [
@@ -32,15 +32,15 @@
         "frameworks": {
           "netcoreapp3.1": {
             "projectReferences": {
-              "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj": {
-                "projectPath": "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj"
+              "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj": {
+                "projectPath": "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj"
               }
             }
           },
           "net48": {
             "projectReferences": {
-              "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj": {
-                "projectPath": "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj"
+              "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj": {
+                "projectPath": "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj"
               }
             }
           }
@@ -107,14 +107,14 @@
         }
       }
     },
-    "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj": {
+    "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj",
+        "projectUniqueName": "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj",
         "projectName": "NUnit.Extension.TestMonitor",
-        "projectPath": "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj",
+        "projectPath": "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor.csproj",
         "packagesPath": "C:\\Users\\mikeb\\.nuget\\packages\\",
-        "outputPath": "C:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\obj\\",
+        "outputPath": "B:\\gitrepo\\personalcode\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\NUnit.Extension.TestMonitor\\obj\\",
         "projectStyle": "PackageReference",
         "crossTargeting": true,
         "fallbackFolders": [
@@ -149,6 +149,18 @@
       "frameworks": {
         "net48": {
           "dependencies": {
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
+            "Microsoft.Extensions.Configuration.Binder": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
+            "Microsoft.Extensions.Configuration.Json": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
             "NUnit.Engine": {
               "target": "Package",
               "version": "[3.10.0, )"
@@ -156,12 +168,28 @@
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[12.0.3, )"
+            },
+            "System.Configuration.ConfigurationManager": {
+              "target": "Package",
+              "version": "[4.7.0, )"
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.100\\RuntimeIdentifierGraph.json"
         },
         "netstandard2.0": {
           "dependencies": {
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
+            "Microsoft.Extensions.Configuration.Binder": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
+            "Microsoft.Extensions.Configuration.Json": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
             "NETStandard.Library": {
               "suppressParent": "All",
               "target": "Package",
@@ -175,6 +203,10 @@
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[12.0.3, )"
+            },
+            "System.Configuration.ConfigurationManager": {
+              "target": "Package",
+              "version": "[4.7.0, )"
             }
           },
           "imports": [

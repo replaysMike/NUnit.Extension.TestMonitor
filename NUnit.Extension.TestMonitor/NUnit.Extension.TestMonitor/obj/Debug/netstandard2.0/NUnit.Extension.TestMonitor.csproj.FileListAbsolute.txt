@@ -7,3 +7,12 @@ c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\
 c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Debug\netstandard2.0\NUnit.Extension.TestMonitor.dll
 c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Debug\netstandard2.0\NUnit.Extension.TestMonitor.pdb
 C:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Debug\netstandard2.0\NUnit.Extension.TestMonitor.csprojAssemblyReference.cache
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\bin\Debug\netstandard2.0\NUnit.Extension.TestMonitor.addins
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\bin\Debug\netstandard2.0\NUnit.Extension.TestMonitor.deps.json
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\bin\Debug\netstandard2.0\NUnit.Extension.TestMonitor.dll
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\bin\Debug\netstandard2.0\NUnit.Extension.TestMonitor.pdb
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Debug\netstandard2.0\NUnit.Extension.TestMonitor.csprojAssemblyReference.cache
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Debug\netstandard2.0\NUnit.Extension.TestMonitor.AssemblyInfoInputs.cache
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Debug\netstandard2.0\NUnit.Extension.TestMonitor.AssemblyInfo.cs
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Debug\netstandard2.0\NUnit.Extension.TestMonitor.dll
+B:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Debug\netstandard2.0\NUnit.Extension.TestMonitor.pdb
