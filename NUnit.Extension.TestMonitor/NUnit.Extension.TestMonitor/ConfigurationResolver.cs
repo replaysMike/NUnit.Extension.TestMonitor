@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Configuration;
+using Newtonsoft.Json;
 using System.IO;
+using System.Reflection;
 
 namespace NUnit.Extension.TestMonitor
 {
     public class ConfigurationResolver
     {
-        private const string DotNetCoreSettingsFilename = "appsettings.json";
+        private const string SettingsFilename = "appsettings.json";
         private const string ConfigurationSectionName = "TestMonitor";
 
         /// <summary>
@@ -32,19 +32,19 @@ namespace NUnit.Extension.TestMonitor
                 case RuntimeDetection.RuntimeFramework.DotNetCore:
                     return GetDotNetCoreConfiguration() ?? defaultConfiguration;
                 case RuntimeDetection.RuntimeFramework.DotNetFramework:
-                    return GetDotNetFrameworkConfiguration(defaultConfiguration);
+                    return GetDotNetFrameworkConfiguration() ?? defaultConfiguration;
             }
             return defaultConfiguration;
         }
 
-        private Configuration GetDotNetCoreConfiguration(string appSettingsJson = DotNetCoreSettingsFilename, string path = null)
+        private Configuration GetDotNetCoreConfiguration(string appSettingsJson = SettingsFilename, string path = null)
         {
             if (string.IsNullOrEmpty(path))
                 path = Directory.GetCurrentDirectory();
             var filePath = Path.Combine(path, appSettingsJson);
             if (!File.Exists(filePath))
                 return null;
-            var builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            var builder = new ConfigurationBuilder()
                 .SetBasePath(path)
                 .AddJsonFile(appSettingsJson, optional: true);
             var configurationRoot = builder.Build();
@@ -54,19 +54,25 @@ namespace NUnit.Extension.TestMonitor
             return configuration;
         }
 
-        private Configuration GetDotNetFrameworkConfiguration(Configuration defaultConfiguration)
+        private Configuration GetDotNetFrameworkConfiguration(string appSettingsJson = SettingsFilename, string path = null)
         {
-            if (!Enum.TryParse<EventEmitTypes>(ConfigurationManager.AppSettings["EventEmitType"], out var eventEmitType))
-                eventEmitType = defaultConfiguration.EventEmitType;
-            if (!Enum.TryParse<EventFormatTypes>(ConfigurationManager.AppSettings["EventFormat"], out var eventFormat))
-                eventFormat = defaultConfiguration.EventFormat;
-            var configuration = new Configuration
-            {
-                EventEmitType = eventEmitType,
-                EventFormat = eventFormat,
-                EventsLogFile = ConfigurationManager.AppSettings["EventsLogFile"] ?? defaultConfiguration.EventsLogFile
-            };
-            return configuration;
+            // resolve the configuration a little differently since we don't have a ConfigurationBuilder available
+            if (string.IsNullOrEmpty(path))
+                path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var filePath = Path.Combine(path, appSettingsJson);
+
+            if (!File.Exists(filePath))
+                filePath = Path.Combine(Directory.GetCurrentDirectory(), appSettingsJson);
+            if (!File.Exists(filePath))
+                return null;
+
+            var configString = File.ReadAllText(filePath);
+            // here we use a container for the configuration to match the json format since we don't have a GetSection() capability
+            if (string.IsNullOrEmpty(configString))
+                return null;
+
+            var config = JsonConvert.DeserializeObject<TestMonitorConfiguration>(configString).TestMonitor;
+            return config;
         }
     }
 }
