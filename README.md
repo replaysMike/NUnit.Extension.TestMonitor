@@ -28,7 +28,7 @@ PM> Install-Package NUnit.Extension.TestMonitor
 
 To customize settings for the extension, you can add an `appsettings.json` configuration file to your test project and it will be read by the nuget extension. It should contain the following section in the root of your settings file:
 
-```json
+```
 {
   "TestMonitor": {
     // the type of events to emit, can define multiple. Valid options: NamedPipes,StdOut,LogFile
