@@ -20,6 +20,7 @@ namespace NUnit.Extension.TestMonitor
         public int Warnings { get; set; }
         public int Skipped { get; set; }
         public int Inconclusive { get; set; }
+        public int TestCount { get; set; }
         public DataReport Report { get; set; }
 
         public DataEvent(EventNames eventName)
