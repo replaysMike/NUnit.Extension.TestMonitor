@@ -1,8 +1,0 @@
-c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\bin\Release\netstandard2.0\NUnit.Extension.TestMonitor.deps.json
-c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\bin\Release\netstandard2.0\NUnit.Extension.TestMonitor.dll
-c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\bin\Release\netstandard2.0\NUnit.Extension.TestMonitor.pdb
-c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Release\netstandard2.0\NUnit.Extension.TestMonitor.csprojAssemblyReference.cache
-c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Release\netstandard2.0\NUnit.Extension.TestMonitor.AssemblyInfoInputs.cache
-c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Release\netstandard2.0\NUnit.Extension.TestMonitor.AssemblyInfo.cs
-c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Release\netstandard2.0\NUnit.Extension.TestMonitor.dll
-c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\obj\Release\netstandard2.0\NUnit.Extension.TestMonitor.pdb
