@@ -1,0 +1,15 @@
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\NUnit3.TestAdapter.dll
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\NUnit3.TestAdapter.pdb
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\nunit.engine.dll
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\nunit.engine.api.dll
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.deps.json
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.dll
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.pdb
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.dll
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.pdb
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\obj\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.csprojAssemblyReference.cache
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\obj\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.AssemblyInfoInputs.cache
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\obj\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.AssemblyInfo.cs
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\obj\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.csproj.CopyComplete
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\obj\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.dll
+c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\obj\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.pdb

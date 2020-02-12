@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
+    <Authors>Michael Brown</Authors>
+    <Company>Refactor Software</Company>
+    <Description>Provides realtime test monitoring functionality to NUnit</Description>
+    <PackageReleaseNotes>Provides realtime test monitoring functionality to NUnit</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/replaysMike/NUnit.Extension.TestMonitor</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/replaysMike/NUnit.Extension.TestMonitor</RepositoryUrl>
+    <PackageTags>nunit extension testmonitor real-time testing tests refactor software michael brown</PackageTags>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="NUnit.Engine" Version="3.10.0" />
+  </ItemGroup>
+
+</Project>

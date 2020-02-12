@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>NUnit.Extension.TestMonitor.Tests</id>
+    <version>1.0.0</version>
+    <authors>NUnit.Extension.TestMonitor.Tests</authors>
+    <owners>NUnit.Extension.TestMonitor.Tests</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Package Description</description>
+    <dependencies>
+      <group targetFramework=".NETCoreApp3.1">
+        <dependency id="NUnit.Extension.TestMonitor" version="1.0.0" exclude="Build,Analyzers" />
+        <dependency id="NUnit" version="3.12.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <contentFiles>
+      <files include="any/netcoreapp3.1/NUnit3.TestAdapter.dll" buildAction="Content" />
+      <files include="any/netcoreapp3.1/NUnit3.TestAdapter.pdb" buildAction="Content" />
+      <files include="any/netcoreapp3.1/nunit.engine.dll" buildAction="Content" />
+      <files include="any/netcoreapp3.1/nunit.engine.api.dll" buildAction="Content" />
+    </contentFiles>
+  </metadata>
+  <files>
+    <file src="c:\gitrepo\personalcode\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.Tests\bin\Release\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.dll" target="lib\netcoreapp3.1\NUnit.Extension.TestMonitor.Tests.dll" />
+    <file src="C:\Users\mikeb\.nuget\packages\nunit3testadapter\3.16.1\build\netcoreapp2.1\NUnit3.TestAdapter.dll" target="content\NUnit3.TestAdapter.dll" />
+    <file src="C:\Users\mikeb\.nuget\packages\nunit3testadapter\3.16.1\build\netcoreapp2.1\NUnit3.TestAdapter.dll" target="contentFiles\any\netcoreapp3.1\NUnit3.TestAdapter.dll" />
+    <file src="C:\Users\mikeb\.nuget\packages\nunit3testadapter\3.16.1\build\netcoreapp2.1\NUnit3.TestAdapter.pdb" target="content\NUnit3.TestAdapter.pdb" />
+    <file src="C:\Users\mikeb\.nuget\packages\nunit3testadapter\3.16.1\build\netcoreapp2.1\NUnit3.TestAdapter.pdb" target="contentFiles\any\netcoreapp3.1\NUnit3.TestAdapter.pdb" />
+    <file src="C:\Users\mikeb\.nuget\packages\nunit3testadapter\3.16.1\build\netcoreapp2.1\nunit.engine.dll" target="content\nunit.engine.dll" />
+    <file src="C:\Users\mikeb\.nuget\packages\nunit3testadapter\3.16.1\build\netcoreapp2.1\nunit.engine.dll" target="contentFiles\any\netcoreapp3.1\nunit.engine.dll" />
+    <file src="C:\Users\mikeb\.nuget\packages\nunit3testadapter\3.16.1\build\netcoreapp2.1\nunit.engine.api.dll" target="content\nunit.engine.api.dll" />
+    <file src="C:\Users\mikeb\.nuget\packages\nunit3testadapter\3.16.1\build\netcoreapp2.1\nunit.engine.api.dll" target="contentFiles\any\netcoreapp3.1\nunit.engine.api.dll" />
+  </files>
+</package>
