@@ -1,4 +1,10 @@
 # NUnit.Extension.TestMonitor
+[![nuget](https://img.shields.io/nuget/v/NUnit.Extension.TestMonitor.svg)](https://www.nuget.org/packages/NUnit.Extension.TestMonitor/)
+[![nuget](https://img.shields.io/nuget/dt/NUnit.Extension.TestMonitor.svg)](https://www.nuget.org/packages/NUnit.Extension.TestMonitor/)
+[![Build status](https://ci.appveyor.com/api/projects/status/6vxd3cq83kuo4hg1?svg=true)](https://ci.appveyor.com/project/MichaelBrown/NUnit.Extension.TestMonitor)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a79c138869504a359a064a98aa74908a)](https://www.codacy.com/app/replaysMike/NUnit.Extension.TestMonitor?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=replaysMike/NUnit.Extension.TestMonitor&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/a79c138869504a359a064a98aa74908a)](https://www.codacy.com/app/replaysMike/NUnit.Extension.TestMonitor?utm_source=github.com&utm_medium=referral&utm_content=replaysMike/NUnit.Extension.TestMonitor&utm_campaign=Badge_Coverage)
+
 Provides realtime test monitoring functionality to NUnit using IPC/Named Pipes, log files, or StdOut.
 
 # Installation
