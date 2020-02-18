@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using NUnit.Engine;
 using NUnit.Engine.Extensibility;
+using NUnit.Framework;
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -18,6 +19,7 @@ namespace NUnit.Extension.TestMonitor
         private NamedPipeServerStream _serverStream;
         private StreamWriter _ipcWriter;
         private SemaphoreSlim _lock;
+        private ManualResetEvent _connectionEvent;
         private ConfigurationResolver _configurationResolver;
         private Configuration _configuration;
 
@@ -26,6 +28,7 @@ namespace NUnit.Extension.TestMonitor
         public TestMonitorExtension()
         {
             _lock = new SemaphoreSlim(1, 1);
+            _connectionEvent = new ManualResetEvent(false);
             _configurationResolver = new ConfigurationResolver(new RuntimeDetection());
             _configuration = _configurationResolver.GetConfiguration();
             if (_configuration.EventEmitType.HasFlag(EventEmitTypes.StdOut))
@@ -220,8 +223,23 @@ namespace NUnit.Extension.TestMonitor
 
         private void StartIpcServer()
         {
-            _serverStream = new NamedPipeServerStream(nameof(TestMonitorExtension));
+            _serverStream = new NamedPipeServerStream(nameof(TestMonitorExtension), PipeDirection.InOut, 1, PipeTransmissionMode.Message);
             _ipcWriter = new StreamWriter(_serverStream);
+            var connectionResult = _serverStream.BeginWaitForConnection((ar) => HandleConnection(ar), null);
+            if (!_connectionEvent.WaitOne(_configuration.NamedPipesConnectionTimeoutMilliseconds))
+            {
+                // timeout waiting for connecting client
+                var testContext = TestContext.CurrentContext;
+                StdOut.WriteLine($"Timeout ({TimeSpan.FromSeconds(_configuration.NamedPipesConnectionTimeoutMilliseconds)}) waiting for NamedPipe client to connect!");
+                _serverStream.Dispose();
+            }
+        }
+
+        private void HandleConnection(IAsyncResult c)
+        {
+            // connected
+            _serverStream.EndWaitForConnection(c);
+            _connectionEvent.Set();
         }
 
         private void WriteEvent(DataEvent data)
@@ -232,10 +250,18 @@ namespace NUnit.Extension.TestMonitor
                 data.Runtime = _configurationResolver.RuntimeDetection.DetectedRuntimeFramework.ToString();
                 var serializedString = JsonConvert.SerializeObject(data) + Environment.NewLine;
                 // emit IPC/Named pipes
-                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes)
-                    && _ipcWriter != null
-                    && _serverStream.IsConnected)
-                    _ipcWriter.Write(serializedString);
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes) && _ipcWriter != null && _serverStream.IsConnected)
+                {
+                    try
+                    {
+                        _ipcWriter.Write(serializedString);
+                        _ipcWriter.Flush();
+                    }
+                    catch (IOException ex)
+                    {
+                        StdOut.WriteLine($"Error writing to named pipe: {ex.Message}");
+                    }
+                }
                 // emit log
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile)
                     && !string.IsNullOrEmpty(_configuration.EventsLogFile))
@@ -263,9 +289,12 @@ namespace NUnit.Extension.TestMonitor
                     _ipcWriter?.Flush();
                     _ipcWriter?.Dispose();
                     _ipcWriter = null;
-                    _serverStream?.Disconnect();
+                    if (_serverStream?.IsConnected == true)
+                        _serverStream?.Disconnect();
                     _serverStream?.Dispose();
                     _serverStream = null;
+                    _connectionEvent?.Dispose();
+                    _connectionEvent = null;
                 }
                 finally
                 {

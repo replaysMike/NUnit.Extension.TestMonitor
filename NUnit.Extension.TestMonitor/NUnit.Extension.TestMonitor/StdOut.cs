@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NUnit.Framework;
+using System;
 using System.Diagnostics;
 
 namespace NUnit.Extension.TestMonitor
@@ -31,6 +32,9 @@ namespace NUnit.Extension.TestMonitor
                 case EventOutputStreams.StdOut:
                     Console.Out.WriteLine(message);
                     break;
+                case EventOutputStreams.TestContext:
+                    TestContext.Out.WriteLine(message);
+                    break;
             }
         }
 
@@ -43,13 +47,16 @@ namespace NUnit.Extension.TestMonitor
             switch (_outputStream)
             {
                 case EventOutputStreams.Trace:
-                    Trace.WriteLine(message);
+                    Trace.Write(message);
                     break;
                 case EventOutputStreams.Debug:
-                    Debug.WriteLine(message);
+                    Debug.Write(message);
                     break;
                 case EventOutputStreams.StdOut:
-                    Console.Out.WriteLine(message);
+                    Console.Out.Write(message);
+                    break;
+                case EventOutputStreams.TestContext:
+                    TestContext.Out.Write(message);
                     break;
             }
         }

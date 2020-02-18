@@ -17,6 +17,10 @@
         /// <summary>
         /// StdOut / Console output
         /// </summary>
-        StdOut = 1 << 3
+        StdOut = 1 << 3,
+        /// <summary>
+        /// NUnit TestContext output
+        /// </summary>
+        TestContext = 1 << 4
     }
 }
