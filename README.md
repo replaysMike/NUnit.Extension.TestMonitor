@@ -11,7 +11,7 @@ This extension is compatible with both the [NUnit-Console](https://github.com/nu
 
 ### NUnit-Console Configuration
 
-If using the [NUnit-Console](https://github.com/nunit/nunit-console) runner you must place the extension inside the `addins/` folder of the installation location of NUnit-Console. [Download](https://github.com/replaysMike/NUnit.Extension.TestMonitor/releases) the latest pre-compiled release. The folder should already exist, and you should place the extension dll's in it's own folder called `NUnit.Extension.TestMonitor`. Additionally, you must tell NUnit-Console of it's existence by appending to the `nunit.bundle.addins` file with the following contents:
+If using the [NUnit-Console](https://github.com/nunit/nunit-console) runner you must place the extension inside the `addins/` folder of the installation location of NUnit-Console. [Download](https://github.com/replaysMike/NUnit.Extension.TestMonitor/releases) the latest pre-compiled release. The `addins/` folder of NUnit-Console should already exist in its installation folder, and you should place the extension dll's in it's own folder called `NUnit.Extension.TestMonitor`. Additionally, you must tell NUnit-Console of it's existence by appending to the `nunit.bundle.addins` file with the following contents:
 
 ```
 addins/NUnit.Extension.TestMonitor/NUnit.Extension.TestMonitor.dll      # Include the TestMonitor nUnit extension
