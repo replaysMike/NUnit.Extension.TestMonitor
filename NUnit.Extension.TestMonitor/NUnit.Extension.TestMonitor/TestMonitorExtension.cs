@@ -3,8 +3,10 @@ using NUnit.Engine;
 using NUnit.Engine.Extensibility;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
+using System.Text;
 using System.Threading;
 using System.Xml;
 
@@ -16,6 +18,7 @@ namespace NUnit.Extension.TestMonitor
     [Extension(Description = "Provides Test event monitoring and logging", EngineVersion = "3.4")]
     public class TestMonitorExtension : ITestEventListener, IDisposable
     {
+        private const int BufferSize = 1024 * 60;
         private NamedPipeServerStream _serverStream;
         private StreamWriter _ipcWriter;
         private SemaphoreSlim _lock;
@@ -88,7 +91,8 @@ namespace NUnit.Extension.TestMonitor
                         ParentId = parentId,
                         TestSuite = suiteName,
                         FullName = suiteFullName,
-                        StartTime = DateTime.Now
+                        StartTime = DateTime.Now,
+                        TestStatus = TestStatus.Running
                     });
                     break;
             }
@@ -102,6 +106,7 @@ namespace NUnit.Extension.TestMonitor
             var name = entry.GetAttribute("name");
             var fullName = entry.GetAttribute("fullname");
             var type = entry.GetAttribute("type");
+
             switch (type)
             {
                 case "TestMethod":
@@ -112,7 +117,8 @@ namespace NUnit.Extension.TestMonitor
                         ParentId = parentId,
                         TestName = name,
                         FullName = fullName,
-                        StartTime = DateTime.Now
+                        StartTime = DateTime.Now,
+                        TestStatus = TestStatus.Running
                     });
                     break;
             }
@@ -128,9 +134,14 @@ namespace NUnit.Extension.TestMonitor
             var startTime = DateTime.Parse(entry.GetAttribute("start-time"));
             var endTime = DateTime.Parse(entry.GetAttribute("end-time"));
             var duration = TimeSpan.FromSeconds(double.Parse(entry.GetAttribute("duration")));
-            var result = entry.GetAttribute("result") == "Passed" ? true : false;
+            var testResult = entry.GetAttribute("result") == "Passed" ? true : false;
+            var testStatus = testResult ? TestStatus.Pass : TestStatus.Fail;
+            var testOutput = entry.SelectSingleNode("output").InnerText;
+            var failure = entry.SelectSingleNode("failure");
+            var errorMessage = failure?.SelectSingleNode("message").InnerText;
+            var stackTrace = failure?.SelectSingleNode("stack-trace").InnerText;
 
-            StdOut.WriteLine($"[EndTest] '{name}' {(result ? "passed" : "failed")} in {duration}");
+            StdOut.WriteLine($"[EndTest] '{name}' {(testResult ? "passed" : "failed")} in {duration}");
             WriteEvent(new DataEvent(EventNames.EndTest)
             {
                 Id = id,
@@ -140,7 +151,15 @@ namespace NUnit.Extension.TestMonitor
                 StartTime = startTime,
                 EndTime = endTime,
                 Duration = duration,
-                TestResult = result,
+                TestResult = testResult,
+                TestStatus = testStatus,
+                ErrorMessage = errorMessage,
+                StackTrace = stackTrace,
+                TestOutput = testOutput,
+                Report = new DataReport
+                {
+                    TotalTests = 1
+                }
             });
         }
 
@@ -161,6 +180,8 @@ namespace NUnit.Extension.TestMonitor
             var skipped = int.Parse(entry.GetAttribute("skipped"));
             var passed = int.Parse(entry.GetAttribute("passed"));
             var failed = int.Parse(entry.GetAttribute("failed"));
+            var testStatus = result ? TestStatus.Pass : TestStatus.Fail;
+
             switch (type)
             {
                 case "TestMethod":
@@ -179,12 +200,17 @@ namespace NUnit.Extension.TestMonitor
                         Warnings = warnings,
                         Skipped = skipped,
                         TestCount = totalTests,
-                        Inconclusive = inconclusive
+                        Inconclusive = inconclusive,
+                        TestStatus = testStatus
                     });
                     break;
             }
         }
 
+        /// <summary>
+        /// All tests have been run
+        /// </summary>
+        /// <param name="e"></param>
         private void EndRun(TestMonitorExtensionEventArgs e)
         {
             var entry = e.Report.FirstChild;
@@ -195,11 +221,35 @@ namespace NUnit.Extension.TestMonitor
             var endTime = DateTime.Parse(entry.GetAttribute("end-time"));
             var duration = TimeSpan.FromSeconds(double.Parse(entry.GetAttribute("duration")));
             var result = entry.GetAttribute("result") == "Passed" ? true : false;
-            var totalTests = int.Parse(entry.GetAttribute("total"));
+            var testCount = int.Parse(entry.GetAttribute("testcasecount"));
             var inconclusive = int.Parse(entry.GetAttribute("inconclusive"));
             var skipped = int.Parse(entry.GetAttribute("skipped"));
             var passed = int.Parse(entry.GetAttribute("passed"));
             var failed = int.Parse(entry.GetAttribute("failed"));
+            var testStatus = result ? TestStatus.Pass : TestStatus.Fail;
+            var testCaseNodes = e.Report.GetElementsByTagName("test-case");
+            var testCases = new List<TestCaseReport>();
+            foreach(XmlNode testCaseNode in testCaseNodes)
+            {
+                var failure = testCaseNode.SelectSingleNode("failure");
+                var testResult = testCaseNode.GetAttribute("result") == "Passed" ? true : false;
+                testCases.Add(new TestCaseReport
+                {
+                    Id = testCaseNode.GetAttribute("id"),
+                    TestSuite = testCaseNode.ParentNode.GetAttribute("name"),
+                    TestName = testCaseNode.GetAttribute("name"),
+                    FullName = testCaseNode.GetAttribute("fullname"),
+                    ErrorMessage = failure?.SelectSingleNode("message").InnerText,
+                    StackTrace = failure?.SelectSingleNode("stack-trace").InnerText,
+                    StartTime = DateTime.Parse(testCaseNode.GetAttribute("start-time")),
+                    EndTime = DateTime.Parse(testCaseNode.GetAttribute("end-time")),
+                    Duration = TimeSpan.FromSeconds(double.Parse(testCaseNode.GetAttribute("duration"))),
+                    TestOutput = testCaseNode.SelectSingleNode("output").InnerText,
+                    TestStatus = testResult ? TestStatus.Pass : TestStatus.Fail,
+                    TestResult = testResult
+                });
+            }
+
             StdOut.WriteLine($"[Report] All tests completed in {duration}. {passed} passed {failed} failures");
             WriteEvent(new DataEvent(EventNames.Report)
             {
@@ -212,9 +262,12 @@ namespace NUnit.Extension.TestMonitor
                 TestResult = result,
                 Passed = passed,
                 Failed = failed,
+                TestCount = testCount,
+                TestStatus = testStatus,
                 Report = new DataReport
                 {
-                    TotalTests = totalTests,
+                    TotalTests = testCount,
+                    TestReports = testCases
                 },
                 Skipped = skipped,
                 Inconclusive = inconclusive
@@ -223,8 +276,8 @@ namespace NUnit.Extension.TestMonitor
 
         private void StartIpcServer()
         {
-            _serverStream = new NamedPipeServerStream(nameof(TestMonitorExtension), PipeDirection.InOut, 1, PipeTransmissionMode.Message);
-            _ipcWriter = new StreamWriter(_serverStream);
+            _serverStream = new NamedPipeServerStream(nameof(TestMonitorExtension), PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.None, BufferSize, BufferSize);
+            _ipcWriter = new StreamWriter(_serverStream, Encoding.Default, BufferSize);
             var connectionResult = _serverStream.BeginWaitForConnection((ar) => HandleConnection(ar), null);
             if (!_connectionEvent.WaitOne(_configuration.NamedPipesConnectionTimeoutMilliseconds))
             {
@@ -249,6 +302,7 @@ namespace NUnit.Extension.TestMonitor
             {
                 data.Runtime = _configurationResolver.RuntimeDetection.DetectedRuntimeFramework.ToString();
                 var serializedString = JsonConvert.SerializeObject(data) + Environment.NewLine;
+                // StdOut.WriteLine($"WRITE {data.Event} - {serializedString.Length} bytes");
                 // emit IPC/Named pipes
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes) && _ipcWriter != null && _serverStream.IsConnected)
                 {
