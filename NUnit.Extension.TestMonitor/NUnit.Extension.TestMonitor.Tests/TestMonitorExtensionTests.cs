@@ -35,7 +35,9 @@ namespace NUnit.Extension.TestMonitor.Tests
         {
             TestContext.WriteLine($"Running {nameof(Should_Test3_Work)}");
             await Task.Delay(3 * 1000);
-            throw new System.Exception("This test failed, stack trace is as follows.");
+            Assert.AreEqual(true, true);
+            //Assert.AreEqual(true, false, "Example error message");
+            // throw new System.Exception("This test failed, stack trace is as follows.");
         }
     }
 }

@@ -12,6 +12,21 @@ namespace NUnit.Extension.TestMonitor
         public string Runtime { get; set; }
 
         /// <summary>
+        /// The .Net runtime full version
+        /// </summary>
+        public string RuntimeVersion { get; set; }
+
+        /// <summary>
+        /// The unique test run id
+        /// </summary>
+        public Guid TestRunId { get; set; }
+
+        /// <summary>
+        /// The test runner process that is executing tests
+        /// </summary>
+        public string TestRunner { get; set; }
+
+        /// <summary>
         /// Event name (StartSuite, EndSuite, StartTest, EndTest, Report)
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))]
@@ -97,6 +112,11 @@ namespace NUnit.Extension.TestMonitor
         /// Total number of tests run
         /// </summary>
         public int TestCount { get; set; }
+
+        /// <summary>
+        /// Total number of assertions
+        /// </summary>
+        public int Asserts { get; set; }
 
         /// <summary>
         /// Test output

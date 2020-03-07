@@ -12,5 +12,10 @@ namespace NUnit.Extension.TestMonitor
             EventName = eventName;
             Report = report;
         }
+
+        public override string ToString()
+        {
+            return $"{EventName}-{Report?.OuterXml?.ToString()}";
+        }
     }
 }
