@@ -24,6 +24,8 @@ addins/NUnit.Extension.TestMonitor/NUnit.Extension.TestMonitor.dll      # Includ
 ```
 If you wish to customize the extension with non-default options (such as enabling file based logging) you can edit the settings file which will be located at `addins/NUnit.Extension.TestMonitor/appsettings.json`.
 
+To confirm that your extension is recognized, you can check with the console runner using: `nunit3-console.exe --list-extensions`
+
 ### Dotnet Test Configuration
 
 If using the `dotnet test` command to run your tests you should add the Nuget package to your test project. 
