@@ -17,7 +17,7 @@ namespace NUnit.Extension.TestMonitor.Tests
             TestContext.WriteLine($"Running {nameof(Should_Test1_Work)}");
             await Task.Delay(1 * 1000);
             if (true)
-                Assert.AreEqual(true, true);
+                Assert.AreEqual(true, false);
             else
             {
                 // enable this for random failures

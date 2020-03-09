@@ -2,12 +2,9 @@
 using NUnit.Engine;
 using NUnit.Engine.Extensibility;
 using NUnit.Extension.TestMonitor.IO;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Pipes;
-using System.Text;
 using System.Threading;
 using System.Xml;
 
@@ -66,6 +63,9 @@ namespace NUnit.Extension.TestMonitor
                 // we are only interested in specific events
                 switch (doc.FirstChild.Name)
                 {
+                    case "start-run":
+                        StartRun(new TestMonitorExtensionEventArgs(doc.FirstChild.Name, doc));
+                        break;
                     // a specific test suite is starting
                     case "start-suite":
                         StartSuite(new TestMonitorExtensionEventArgs(doc.FirstChild.Name, doc));
@@ -91,6 +91,27 @@ namespace NUnit.Extension.TestMonitor
             catch (Exception ex)
             {
                 WriteLog($"[{DateTime.Now}]|ERROR|{nameof(OnTestEvent)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+            }
+        }
+
+        private void StartRun(TestMonitorExtensionEventArgs e)
+        {
+            try
+            {
+                var entry = e.Report.FirstChild;
+                var count = int.Parse(entry.GetAttribute("count"));
+                StdOut.WriteLine($"[StartRun] Tests: {count}");
+                WriteEvent(new DataEvent(EventNames.StartRun)
+                {
+                    TestCount = count,
+                    StartTime = DateTime.Now,
+                    TestRunId = RuntimeInfo.Instance.TestRunId,
+                    TestRunner = RuntimeInfo.Instance.ProcessName,
+                });
+            }
+            catch (Exception ex)
+            {
+                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(StartRun)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -297,6 +318,9 @@ namespace NUnit.Extension.TestMonitor
                 var testCaseNodes = e.Report.GetElementsByTagName("test-case");
                 var testCases = new List<TestCaseReport>();
                 if (testCaseNodes != null && testCaseNodes.Count > 0) {
+                    var runtime = _configurationResolver.RuntimeDetection.DetectedRuntimeFramework.ToString();
+                    var runtimeVersion = _configurationResolver.RuntimeDetection.DetectedRuntimeFrameworkDescription.ToString();
+
                     foreach (XmlNode testCaseNode in testCaseNodes)
                     {
                         var failure = testCaseNode.SelectSingleNode("failure");
@@ -304,6 +328,8 @@ namespace NUnit.Extension.TestMonitor
                         testCases.Add(new TestCaseReport
                         {
                             Id = testCaseNode.GetAttribute("id"),
+                            Runtime = runtime,
+                            RuntimeVersion = runtimeVersion,
                             TestSuite = testCaseNode.ParentNode.GetAttribute("name"),
                             TestName = testCaseNode.GetAttribute("name"),
                             FullName = testCaseNode.GetAttribute("fullname"),
