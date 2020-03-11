@@ -124,6 +124,11 @@ namespace NUnit.Extension.TestMonitor
         public int Asserts { get; set; }
 
         /// <summary>
+        /// True if this test was ignored
+        /// </summary>
+        public bool IsSkipped { get; set; }
+
+        /// <summary>
         /// Test output
         /// </summary>
         public string TestOutput { get; set; }

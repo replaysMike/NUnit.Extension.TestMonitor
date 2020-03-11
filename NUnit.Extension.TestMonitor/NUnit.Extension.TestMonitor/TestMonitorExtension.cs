@@ -208,12 +208,37 @@ namespace NUnit.Extension.TestMonitor
                     var startTime = GetDateTime(entry.GetAttribute("start-time"));
                     var endTime = GetDateTime(entry.GetAttribute("end-time"));
                     var duration = TimeSpan.FromSeconds(GetDouble(entry.GetAttribute("duration")));
-                    var testResult = entry.GetAttribute("result") == "Passed" ? true : false;
-                    var testStatus = testResult ? TestStatus.Pass : TestStatus.Fail;
+                    var label = entry.GetAttribute("label");
+                    var result = entry.GetAttribute("result");
+                    var isSkipped = false;
                     var testOutput = entry.SelectSingleNode("output")?.InnerText;
                     var failure = entry.SelectSingleNode("failure");
                     var errorMessage = failure?.SelectSingleNode("message")?.InnerText;
                     var stackTrace = failure?.SelectSingleNode("stack-trace")?.InnerText;
+                    var properties = entry.SelectSingleNode("properties");
+                    var skipReason = properties?.SelectSingleNode("property[@name='_SKIPREASON']")?.GetAttribute("value");
+                    
+                    var testResult = false;
+                    TestStatus testStatus = TestStatus.Fail;
+
+                    switch (result.ToLower())
+                    {
+                        case "passed":
+                            testResult = true;
+                            testStatus = TestStatus.Pass;
+                            break;
+                        case "failed":
+                            testResult = false;
+                            testStatus = TestStatus.Fail;
+                            break;
+                        case "skipped":
+                            testResult = false;
+                            testStatus = TestStatus.Skipped;
+                            isSkipped = true;
+                            if (skipReason != null)
+                                errorMessage = skipReason;
+                            break;
+                    }
 
                     StdOut.WriteLine($"[EndTest] '{name}' {(testResult ? "passed" : "failed")} in {duration}");
                     WriteEvent(new DataEvent(EventNames.EndTest)
@@ -228,6 +253,7 @@ namespace NUnit.Extension.TestMonitor
                         EndTime = endTime,
                         Duration = duration,
                         TestResult = testResult,
+                        IsSkipped = isSkipped,
                         TestStatus = testStatus,
                         ErrorMessage = errorMessage,
                         StackTrace = stackTrace,

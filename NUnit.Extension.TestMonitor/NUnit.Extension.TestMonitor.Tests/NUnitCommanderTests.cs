@@ -56,5 +56,14 @@ namespace NUnit.Extension.TestMonitor.Tests
             //Assert.AreEqual(true, false, "Fake error message");
             // throw new System.Exception("This test failed, stack trace is as follows.");
         }
+
+        [Test]
+        [Ignore("Test ignore message")]
+        public async Task Should_Test5_BeIgnored()
+        {
+            TestContext.WriteLine($"Running {nameof(Should_Test3_Work)}");
+            await Task.Delay(1 * 1000);
+            Assert.AreEqual(true, false);
+        }
     }
 }
