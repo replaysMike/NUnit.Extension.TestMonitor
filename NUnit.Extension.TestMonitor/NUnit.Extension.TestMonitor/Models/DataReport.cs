@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using ProtoBuf;
+using System.Collections.Generic;
 
 namespace NUnit.Extension.TestMonitor
 {
     /// <summary>
     /// Full test report
     /// </summary>
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class DataReport
     {
         /// <summary>
@@ -12,6 +14,6 @@ namespace NUnit.Extension.TestMonitor
         /// </summary>
         public int TotalTests { get; set; }
 
-        public ICollection<TestCaseReport> TestReports { get; set; } = new List<TestCaseReport>();
+        public List<TestCaseReport> TestReports { get; set; } = new List<TestCaseReport>();
     }
 }

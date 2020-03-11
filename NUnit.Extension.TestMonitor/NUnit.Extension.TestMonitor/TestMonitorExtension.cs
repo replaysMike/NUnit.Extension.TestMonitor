@@ -2,11 +2,13 @@
 using NUnit.Engine;
 using NUnit.Engine.Extensibility;
 using NUnit.Extension.TestMonitor.IO;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Xml;
+using System.Xml.Serialization;
 
 namespace NUnit.Extension.TestMonitor
 {
@@ -45,12 +47,6 @@ namespace NUnit.Extension.TestMonitor
             {
                 WriteLog($"[{DateTime.Now}]|ERROR|{nameof(TestMonitorExtension)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
-        }
-
-        private void WriteLog(string text)
-        {
-            if (!string.IsNullOrEmpty(_configuration.EventsLogFile))
-                File.AppendAllText(_configuration.EventsLogFile, text);
         }
 
         public void OnTestEvent(string report)
@@ -218,7 +214,7 @@ namespace NUnit.Extension.TestMonitor
                     var stackTrace = failure?.SelectSingleNode("stack-trace")?.InnerText;
                     var properties = entry.SelectSingleNode("properties");
                     var skipReason = properties?.SelectSingleNode("property[@name='_SKIPREASON']")?.GetAttribute("value");
-                    
+
                     var testResult = false;
                     TestStatus testStatus = TestStatus.Fail;
 
@@ -358,7 +354,8 @@ namespace NUnit.Extension.TestMonitor
                 var testStatus = result ? TestStatus.Pass : TestStatus.Fail;
                 var testCaseNodes = e.Report.GetElementsByTagName("test-case");
                 var testCases = new List<TestCaseReport>();
-                if (testCaseNodes != null && testCaseNodes.Count > 0) {
+                if (testCaseNodes != null && testCaseNodes.Count > 0)
+                {
                     var runtime = _configurationResolver.RuntimeDetection.DetectedRuntimeFramework.ToString();
                     var runtimeVersion = _configurationResolver.RuntimeDetection.DetectedRuntimeFrameworkDescription.ToString();
 
@@ -405,7 +402,7 @@ namespace NUnit.Extension.TestMonitor
                             TestName = testCaseNode.GetAttribute("name"),
                             FullName = testCaseNode.GetAttribute("fullname"),
                             ErrorMessage = errorMessage,
-                            StackTrace = stackTrace,                           
+                            StackTrace = stackTrace,
                             TestResult = testResult,
                             IsSkipped = isSkipped,
                             TestStatus = testCaseStatus,
@@ -453,22 +450,67 @@ namespace NUnit.Extension.TestMonitor
             }
         }
 
-        private void WriteEvent(DataEvent data)
+        private void WriteEvent(DataEvent dataEvent)
         {
             _lock?.Wait();
             try
             {
-                data.TestRunId = RuntimeInfo.Instance.TestRunId;
-                data.Runtime = _configurationResolver.RuntimeDetection.DetectedRuntimeFramework.ToString();
-                data.RuntimeVersion = _configurationResolver.RuntimeDetection.DetectedRuntimeFrameworkDescription.ToString();
-                var serializedString = JsonConvert.SerializeObject(data) + Environment.NewLine;
-                // StdOut.WriteLine($"WRITE {data.Event} - {serializedString.Length} bytes");
-                // emit IPC/Named pipes
+                // inject data required on every event
+                dataEvent.TestRunId = RuntimeInfo.Instance.TestRunId;
+                dataEvent.Runtime = _configurationResolver.RuntimeDetection.DetectedRuntimeFramework.ToString();
+                dataEvent.RuntimeVersion = _configurationResolver.RuntimeDetection.DetectedRuntimeFrameworkDescription.ToString();
+
+                string serializedString = null;
+                byte[] serializedBytes = null;
+                // serialize the data
+                try
+                {
+                    switch (_configuration.EventFormat)
+                    {
+                        case EventFormatTypes.Binary:
+                            using (var stream = new MemoryStream())
+                            {
+                                Serializer.Serialize<DataEvent>(stream, dataEvent);
+                                serializedBytes = stream.ToArray();
+                            }
+                            break;
+                        case EventFormatTypes.Json:
+                            serializedString = JsonConvert.SerializeObject(dataEvent) + Environment.NewLine;
+                            break;
+                        case EventFormatTypes.Xml:
+                            var serializer = new XmlSerializer(typeof(DataEvent));
+                            var settings = new XmlWriterSettings
+                            {
+                                Indent = false,
+                                NewLineHandling = NewLineHandling.None
+                            };
+
+                            using (var stringWriter = new StringWriter())
+                            {
+                                using (var xmlWriter = XmlWriter.Create(stringWriter, settings))
+                                {
+                                    serializer.Serialize(xmlWriter, dataEvent);
+                                    serializedString = stringWriter.ToString() + Environment.NewLine;
+                                }
+                            }
+                            break;
+                    }
+                }
+                catch (Exception serializationException)
+                {
+                    WriteLog($"[{DateTime.Now}]|ERROR|{nameof(WriteEvent)}|Failed to {_configuration.EventFormat} serialize event: {serializationException.GetBaseException().Message}|{serializationException.StackTrace.ToString()}\r\n");
+                    return;
+                }
+
+                // emit serialized data over IPC/Named pipes
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes) && _ipcServer != null)
                 {
                     try
                     {
-                        _ipcServer.Write(serializedString);
+                        if (serializedBytes != null)
+                            _ipcServer.Write(serializedBytes, 0, serializedBytes.Length);
+                        else if (!string.IsNullOrEmpty(serializedString))
+                            _ipcServer.Write(serializedString);
                     }
                     catch (IOException ex)
                     {
@@ -476,10 +518,15 @@ namespace NUnit.Extension.TestMonitor
                         WriteLog($"[{DateTime.Now}]|ERROR|{nameof(WriteEvent)}|Error writing to named pipe: {ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
                     }
                 }
-                // emit log
+                // also log data to file if configured
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile)
                     && !string.IsNullOrEmpty(_configuration.EventsLogFile))
-                    WriteLog(serializedString);
+                {
+                    if (serializedBytes != null)
+                        WriteLog(serializedBytes, dataEvent);
+                    else if (!string.IsNullOrEmpty(serializedString))
+                        WriteLog(serializedString);
+                }
             }
             catch (Exception ex)
             {
@@ -513,6 +560,34 @@ namespace NUnit.Extension.TestMonitor
                 return DateTime.MinValue;
             DateTime.TryParse(str, out var value);
             return value;
+        }
+
+        private void WriteLog(string text)
+        {
+            if (!string.IsNullOrEmpty(_configuration.EventsLogFile))
+                File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}]{text}");
+        }
+
+        private void WriteLog(byte[] bytes, DataEvent dataEvent)
+        {
+            if (!string.IsNullOrEmpty(_configuration.EventsLogFile))
+            {
+                var status = string.Empty;
+                var duration = dataEvent.Duration.ToString();
+                var title = dataEvent.TestName;
+                if (string.IsNullOrEmpty(title))
+                    title = dataEvent.TestSuite;
+                switch (dataEvent.Event)
+                {
+                    case EventNames.EndTest:
+                        status = dataEvent.TestStatus.ToString();
+                        break;
+                    case EventNames.Report:
+                        status = dataEvent.TestStatus.ToString();
+                        break;
+                }
+                File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}] {bytes.Length} bytes - {dataEvent.Event.ToString()} {(title)} {duration} {status}{Environment.NewLine}");
+            }
         }
 
         public void Dispose()

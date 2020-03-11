@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using ProtoBuf;
 using System;
 
 namespace NUnit.Extension.TestMonitor
 {
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class TestCaseReport
     {
         /// <summary>

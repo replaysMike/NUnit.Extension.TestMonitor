@@ -47,7 +47,23 @@ namespace NUnit.Extension.TestMonitor.IO
             }
         }
 
+        /// <summary>
+        /// Write text to connected IPC clients
+        /// </summary>
+        /// <param name="text"></param>
         public void Write(string text)
+        {
+            var textBytes = UseEncoding.GetBytes(text);
+            Write(textBytes, 0, textBytes.Length);
+        }
+
+        /// <summary>
+        /// Write binary to connected IPC clients
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="startPosition"></param>
+        /// <param name="length"></param>
+        public void Write(byte[] data, int startPosition, int length)
         {
             try
             {
@@ -55,20 +71,18 @@ namespace NUnit.Extension.TestMonitor.IO
                 {
                     // write to a local buffer before sending out the IPC pipe. This helps to prevent partial write messages from being sent
                     var messageLength = 0;
-                    var textLength = 0;
+                    var dataLength = 0;
                     using (var stream = new MemoryStream(_messageBufferBytes))
                     {
-                        using(var writer = new BinaryWriter(stream))
+                        using (var writer = new BinaryWriter(stream))
                         {
-                            var textBytes = UseEncoding.GetBytes(text);
-                            textLength = textBytes.Length;
-                            messageLength = TotalHeaderLength + textLength;
+                            messageLength = TotalHeaderLength + dataLength;
                             // write the data length header
                             writer.Write(StartMessageHeader);
-                            writer.Write((UInt32)textBytes.Length);
+                            writer.Write((UInt32)length);
                             writer.Write(EndMessageHeader);
                             // write the data
-                            writer.Write(textBytes);
+                            writer.Write(data, startPosition, length);
                         }
                     }
                     // write to the IPC named pipe
