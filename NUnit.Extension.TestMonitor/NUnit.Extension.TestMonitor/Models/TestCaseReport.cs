@@ -76,5 +76,20 @@ namespace NUnit.Extension.TestMonitor
         /// Stack trace
         /// </summary>
         public string StackTrace { get; set; }
+
+        /// <summary>
+        /// Total number of assertions
+        /// </summary>
+        public int Asserts { get; set; }
+
+        /// <summary>
+        /// True if this test was ignored
+        /// </summary>
+        public bool IsSkipped { get; set; }
+
+        public override string ToString()
+        {
+            return $"{TestName} - {TestStatus}";
+        }
     }
 }

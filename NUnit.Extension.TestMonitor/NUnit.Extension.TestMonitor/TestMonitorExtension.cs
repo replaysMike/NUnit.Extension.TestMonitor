@@ -210,6 +210,7 @@ namespace NUnit.Extension.TestMonitor
                     var duration = TimeSpan.FromSeconds(GetDouble(entry.GetAttribute("duration")));
                     var label = entry.GetAttribute("label");
                     var result = entry.GetAttribute("result");
+                    var asserts = GetInteger(entry.GetAttribute("asserts"));
                     var isSkipped = false;
                     var testOutput = entry.SelectSingleNode("output")?.InnerText;
                     var failure = entry.SelectSingleNode("failure");
@@ -258,6 +259,7 @@ namespace NUnit.Extension.TestMonitor
                         ErrorMessage = errorMessage,
                         StackTrace = stackTrace,
                         TestOutput = testOutput,
+                        Asserts = asserts,
                         Report = new DataReport
                         {
                             TotalTests = 1
@@ -362,8 +364,38 @@ namespace NUnit.Extension.TestMonitor
 
                     foreach (XmlNode testCaseNode in testCaseNodes)
                     {
+                        var label = testCaseNode.GetAttribute("label");
                         var failure = testCaseNode.SelectSingleNode("failure");
+                        var errorMessage = failure?.SelectSingleNode("message")?.InnerText;
+                        var stackTrace = failure?.SelectSingleNode("stack-trace")?.InnerText;
+                        var testOutput = testCaseNode.SelectSingleNode("output")?.InnerText;
                         var testResult = testCaseNode.GetAttribute("result") == "Passed" ? true : false;
+                        var testCaseAsserts = GetInteger(testCaseNode.GetAttribute("asserts"));
+                        var isSkipped = false;
+                        var testCaseResult = testCaseNode.GetAttribute("result");
+                        var properties = testCaseNode.SelectSingleNode("properties");
+                        var skipReason = properties?.SelectSingleNode("property[@name='_SKIPREASON']")?.GetAttribute("value");
+
+                        TestStatus testCaseStatus = TestStatus.Fail;
+                        switch (testCaseResult.ToLower())
+                        {
+                            case "passed":
+                                testResult = true;
+                                testCaseStatus = TestStatus.Pass;
+                                break;
+                            case "failed":
+                                testResult = false;
+                                testCaseStatus = TestStatus.Fail;
+                                break;
+                            case "skipped":
+                                testResult = false;
+                                testCaseStatus = TestStatus.Skipped;
+                                isSkipped = true;
+                                if (skipReason != null)
+                                    errorMessage = skipReason;
+                                break;
+                        }
+
                         testCases.Add(new TestCaseReport
                         {
                             Id = testCaseNode.GetAttribute("id"),
@@ -372,14 +404,16 @@ namespace NUnit.Extension.TestMonitor
                             TestSuite = testCaseNode.ParentNode.GetAttribute("name"),
                             TestName = testCaseNode.GetAttribute("name"),
                             FullName = testCaseNode.GetAttribute("fullname"),
-                            ErrorMessage = failure?.SelectSingleNode("message")?.InnerText,
-                            StackTrace = failure?.SelectSingleNode("stack-trace")?.InnerText,
-                            StartTime = DateTime.Parse(testCaseNode.GetAttribute("start-time")),
-                            EndTime = DateTime.Parse(testCaseNode.GetAttribute("end-time")),
+                            ErrorMessage = errorMessage,
+                            StackTrace = stackTrace,                           
+                            TestResult = testResult,
+                            IsSkipped = isSkipped,
+                            TestStatus = testCaseStatus,
+                            TestOutput = testOutput,
+                            Asserts = testCaseAsserts,
+                            StartTime = GetDateTime(testCaseNode.GetAttribute("start-time")),
+                            EndTime = GetDateTime(testCaseNode.GetAttribute("end-time")),
                             Duration = TimeSpan.FromSeconds(GetDouble(testCaseNode.GetAttribute("duration"))),
-                            TestOutput = testCaseNode.SelectSingleNode("output")?.InnerText,
-                            TestStatus = testResult ? TestStatus.Pass : TestStatus.Fail,
-                            TestResult = testResult
                         });
                     }
                 }
