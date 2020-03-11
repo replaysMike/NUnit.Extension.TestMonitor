@@ -8,11 +8,19 @@ namespace NUnit.Extension.TestMonitor.IO
 {
     public class IpcServer : IDisposable
     {
-        private const int BufferSize = 1024 * 60;
+        private readonly Encoding UseEncoding = Encoding.UTF8;
+        private const int BufferSize = 1024 * 256;
+        private const int MaxMessageBufferSize = 1024 * 1024 * 4; // 4Mb max message size
+        private const ushort StartMessageHeader = 0xA0FF;
+        private const ushort EndMessageHeader = 0xA1FF;
+        private const byte TotalHeaderLength = sizeof(UInt16) + sizeof(UInt32) + sizeof(UInt16);
+
         private NamedPipeServerStream _serverStream;
-        private StreamWriter _ipcWriter;
+        private BinaryWriter _ipcWriter;
         private ManualResetEvent _connectionEvent;
         private Configuration _configuration;
+        private byte[] _messageBufferBytes;
+
         public StdOut StdOut { get; }
         public Guid TestRunId { get; }
 
@@ -26,8 +34,8 @@ namespace NUnit.Extension.TestMonitor.IO
 
         public void Start()
         {
-            _serverStream = new NamedPipeServerStream(nameof(TestMonitorExtension), PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous, BufferSize, BufferSize);
-            _ipcWriter = new StreamWriter(_serverStream, Encoding.Default, BufferSize);
+            _serverStream = new NamedPipeServerStream(nameof(TestMonitorExtension), PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, BufferSize, BufferSize);
+            _ipcWriter = new BinaryWriter(_serverStream, Encoding.Default);
             var connectionResult = _serverStream.BeginWaitForConnection((ar) => HandleConnection(ar), null);
             if (!_connectionEvent.WaitOne(_configuration.NamedPipesConnectionTimeoutMilliseconds))
             {
@@ -45,8 +53,27 @@ namespace NUnit.Extension.TestMonitor.IO
             {
                 if (_serverStream?.IsConnected == true)
                 {
-                    _ipcWriter.Write(text);
-                    _ipcWriter.Flush();
+                    // write to a local buffer before sending out the IPC pipe. This helps to prevent partial write messages from being sent
+                    var messageLength = 0;
+                    var textLength = 0;
+                    using (var stream = new MemoryStream(_messageBufferBytes))
+                    {
+                        using(var writer = new BinaryWriter(stream))
+                        {
+                            var textBytes = UseEncoding.GetBytes(text);
+                            textLength = textBytes.Length;
+                            messageLength = TotalHeaderLength + textLength;
+                            // write the data length header
+                            writer.Write(StartMessageHeader);
+                            writer.Write((UInt32)textBytes.Length);
+                            writer.Write(EndMessageHeader);
+                            // write the data
+                            writer.Write(textBytes);
+                        }
+                    }
+                    // write to the IPC named pipe
+                    _ipcWriter.Write(_messageBufferBytes, 0, messageLength);
+                    //WriteLog($"[{DateTime.Now}]|INFO|{nameof(Write)}|Wrote {textLength} bytes\r\n");
                 }
             }
             catch (IOException ex)
@@ -61,12 +88,21 @@ namespace NUnit.Extension.TestMonitor.IO
             // connected
             try
             {
+                _messageBufferBytes = new byte[MaxMessageBufferSize];
                 _serverStream.EndWaitForConnection(c);
                 _connectionEvent.Set();
             }
             catch (IOException ex)
             {
                 WriteLog($"[{DateTime.Now}]|ERROR|{nameof(HandleConnection)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+            }
+            catch (ObjectDisposedException)
+            {
+                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(HandleConnection)}|Timeout waiting for a client to connect!\r\n");
+            }
+            catch (Exception ex)
+            {
+                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(HandleConnection)}|Unhandled Exception|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -100,6 +136,7 @@ namespace NUnit.Extension.TestMonitor.IO
                         _serverStream = null;
                         _connectionEvent?.Dispose();
                         _connectionEvent = null;
+                        _messageBufferBytes = null;
                     }
                     finally
                     {

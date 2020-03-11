@@ -98,16 +98,19 @@ namespace NUnit.Extension.TestMonitor
         {
             try
             {
-                var entry = e.Report.FirstChild;
-                var count = int.Parse(entry.GetAttribute("count"));
-                StdOut.WriteLine($"[StartRun] Tests: {count}");
-                WriteEvent(new DataEvent(EventNames.StartRun)
+                if (e?.Report != null && e.Report.HasChildNodes)
                 {
-                    TestCount = count,
-                    StartTime = DateTime.Now,
-                    TestRunId = RuntimeInfo.Instance.TestRunId,
-                    TestRunner = RuntimeInfo.Instance.ProcessName,
-                });
+                    var entry = e.Report.FirstChild;
+                    var count = GetInteger(entry.GetAttribute("count"));
+                    StdOut.WriteLine($"[StartRun] Tests: {count}");
+                    WriteEvent(new DataEvent(EventNames.StartRun)
+                    {
+                        TestCount = count,
+                        StartTime = DateTime.Now,
+                        TestRunId = RuntimeInfo.Instance.TestRunId,
+                        TestRunner = RuntimeInfo.Instance.ProcessName,
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -119,28 +122,31 @@ namespace NUnit.Extension.TestMonitor
         {
             try
             {
-                var entry = e.Report.FirstChild;
-                var id = entry.GetAttribute("id");
-                var parentId = entry.GetAttribute("parentId");
-                var suiteName = entry.GetAttribute("name");
-                var suiteFullName = entry.GetAttribute("fullname");
-                var type = entry.GetAttribute("type");
-                switch (type)
+                if (e?.Report != null && e.Report.HasChildNodes)
                 {
-                    case "TestFixture":
-                        StdOut.WriteLine($"[StartSuite] {suiteName}");
-                        WriteEvent(new DataEvent(EventNames.StartSuite)
-                        {
-                            Id = id,
-                            ParentId = parentId,
-                            TestRunId = RuntimeInfo.Instance.TestRunId,
-                            TestRunner = RuntimeInfo.Instance.ProcessName,
-                            TestSuite = suiteName,
-                            FullName = suiteFullName,
-                            StartTime = DateTime.Now,
-                            TestStatus = TestStatus.Running
-                        });
-                        break;
+                    var entry = e.Report.FirstChild;
+                    var id = entry.GetAttribute("id");
+                    var parentId = entry.GetAttribute("parentId");
+                    var suiteName = entry.GetAttribute("name");
+                    var suiteFullName = entry.GetAttribute("fullname");
+                    var type = entry.GetAttribute("type");
+                    switch (type)
+                    {
+                        case "TestFixture":
+                            StdOut.WriteLine($"[StartSuite] {suiteName}");
+                            WriteEvent(new DataEvent(EventNames.StartSuite)
+                            {
+                                Id = id,
+                                ParentId = parentId,
+                                TestRunId = RuntimeInfo.Instance.TestRunId,
+                                TestRunner = RuntimeInfo.Instance.ProcessName,
+                                TestSuite = suiteName,
+                                FullName = suiteFullName,
+                                StartTime = DateTime.Now,
+                                TestStatus = TestStatus.Running
+                            });
+                            break;
+                    }
                 }
             }
             catch (Exception ex)
@@ -153,29 +159,33 @@ namespace NUnit.Extension.TestMonitor
         {
             try
             {
-                var entry = e.Report.FirstChild;
-                var id = entry.GetAttribute("id");
-                var parentId = entry.GetAttribute("parentId");
-                var name = entry.GetAttribute("name");
-                var fullName = entry.GetAttribute("fullname");
-                var type = entry.GetAttribute("type");
-
-                switch (type)
+                if (e?.Report != null && e.Report.HasChildNodes)
                 {
-                    case "TestMethod":
-                        StdOut.WriteLine($"[StartTest] {name}");
-                        WriteEvent(new DataEvent(EventNames.StartTest)
-                        {
-                            Id = id,
-                            ParentId = parentId,
-                            TestRunId = RuntimeInfo.Instance.TestRunId,
-                            TestRunner = RuntimeInfo.Instance.ProcessName,
-                            TestName = name,
-                            FullName = fullName,
-                            StartTime = DateTime.Now,
-                            TestStatus = TestStatus.Running
-                        });
-                        break;
+                    var entry = e.Report.FirstChild;
+                    var id = entry.GetAttribute("id");
+                    var parentId = entry.GetAttribute("parentId");
+                    var name = entry.GetAttribute("name");
+                    var fullName = entry.GetAttribute("fullname");
+                    var type = entry.GetAttribute("type");
+
+                    // regular test method or test case source. It seems test case sources dont have a type.
+                    StdOut.WriteLine($"[StartTest] {name}");
+                    WriteEvent(new DataEvent(EventNames.StartTest)
+                    {
+                        Id = id,
+                        ParentId = parentId,
+                        TestRunId = RuntimeInfo.Instance.TestRunId,
+                        TestRunner = RuntimeInfo.Instance.ProcessName,
+                        TestName = name,
+                        FullName = fullName,
+                        TestType = type,
+                        StartTime = DateTime.Now,
+                        TestStatus = TestStatus.Running
+                    });
+                }
+                else
+                {
+                    WriteLog($"[{DateTime.Now}]|ERROR|{nameof(StartTest)}|Test had no data.\r\n");
                 }
             }
             catch (Exception ex)
@@ -188,16 +198,16 @@ namespace NUnit.Extension.TestMonitor
         {
             try
             {
-                if (e != null && e.Report != null && e.Report.HasChildNodes)
+                if (e?.Report != null && e.Report.HasChildNodes)
                 {
                     var entry = e.Report.FirstChild;
                     var id = entry.GetAttribute("id");
                     var parentId = entry.GetAttribute("parentId");
                     var name = entry.GetAttribute("name");
                     var fullName = entry.GetAttribute("fullname");
-                    var startTime = DateTime.Parse(entry.GetAttribute("start-time"));
-                    var endTime = DateTime.Parse(entry.GetAttribute("end-time"));
-                    var duration = TimeSpan.FromSeconds(double.Parse(entry.GetAttribute("duration")));
+                    var startTime = GetDateTime(entry.GetAttribute("start-time"));
+                    var endTime = GetDateTime(entry.GetAttribute("end-time"));
+                    var duration = TimeSpan.FromSeconds(GetDouble(entry.GetAttribute("duration")));
                     var testResult = entry.GetAttribute("result") == "Passed" ? true : false;
                     var testStatus = testResult ? TestStatus.Pass : TestStatus.Fail;
                     var testOutput = entry.SelectSingleNode("output")?.InnerText;
@@ -243,47 +253,50 @@ namespace NUnit.Extension.TestMonitor
         {
             try
             {
-                var entry = e.Report.FirstChild;
-                var id = entry.GetAttribute("id");
-                var name = entry.GetAttribute("name");
-                var fullName = entry.GetAttribute("fullname");
-                var type = entry.GetAttribute("type");
-                var startTime = DateTime.Parse(entry.GetAttribute("start-time"));
-                var endTime = DateTime.Parse(entry.GetAttribute("end-time"));
-                var duration = TimeSpan.FromSeconds(double.Parse(entry.GetAttribute("duration")));
-                var result = entry.GetAttribute("result") == "Passed" ? true : false;
-                var totalTests = int.Parse(entry.GetAttribute("total"));
-                var warnings = int.Parse(entry.GetAttribute("warnings"));
-                var inconclusive = int.Parse(entry.GetAttribute("inconclusive"));
-                var skipped = int.Parse(entry.GetAttribute("skipped"));
-                var passed = int.Parse(entry.GetAttribute("passed"));
-                var failed = int.Parse(entry.GetAttribute("failed"));
-                var testStatus = result ? TestStatus.Pass : TestStatus.Fail;
-
-                switch (type)
+                if (e?.Report != null && e.Report.HasChildNodes)
                 {
-                    case "TestMethod":
-                        StdOut.WriteLine($"[EndSuite] '{name}' completed in {duration}. {passed} passed {failed} failures");
-                        WriteEvent(new DataEvent(EventNames.EndSuite)
-                        {
-                            Id = id,
-                            TestRunId = RuntimeInfo.Instance.TestRunId,
-                            TestRunner = RuntimeInfo.Instance.ProcessName,
-                            TestName = name,
-                            FullName = fullName,
-                            StartTime = startTime,
-                            EndTime = endTime,
-                            Duration = duration,
-                            TestResult = result,
-                            Passed = passed,
-                            Failed = failed,
-                            Warnings = warnings,
-                            Skipped = skipped,
-                            TestCount = totalTests,
-                            Inconclusive = inconclusive,
-                            TestStatus = testStatus
-                        });
-                        break;
+                    var entry = e.Report.FirstChild;
+                    var id = entry.GetAttribute("id");
+                    var name = entry.GetAttribute("name");
+                    var fullName = entry.GetAttribute("fullname");
+                    var type = entry.GetAttribute("type");
+                    var startTime = GetDateTime(entry.GetAttribute("start-time"));
+                    var endTime = GetDateTime(entry.GetAttribute("end-time"));
+                    var duration = TimeSpan.FromSeconds(GetDouble(entry.GetAttribute("duration")));
+                    var result = entry.GetAttribute("result") == "Passed" ? true : false;
+                    var totalTests = GetInteger(entry.GetAttribute("total"));
+                    var warnings = GetInteger(entry.GetAttribute("warnings"));
+                    var inconclusive = GetInteger(entry.GetAttribute("inconclusive"));
+                    var skipped = GetInteger(entry.GetAttribute("skipped"));
+                    var passed = GetInteger(entry.GetAttribute("passed"));
+                    var failed = GetInteger(entry.GetAttribute("failed"));
+                    var testStatus = result ? TestStatus.Pass : TestStatus.Fail;
+
+                    switch (type)
+                    {
+                        case "TestMethod":
+                            StdOut.WriteLine($"[EndSuite] '{name}' completed in {duration}. {passed} passed {failed} failures");
+                            WriteEvent(new DataEvent(EventNames.EndSuite)
+                            {
+                                Id = id,
+                                TestRunId = RuntimeInfo.Instance.TestRunId,
+                                TestRunner = RuntimeInfo.Instance.ProcessName,
+                                TestName = name,
+                                FullName = fullName,
+                                StartTime = startTime,
+                                EndTime = endTime,
+                                Duration = duration,
+                                TestResult = result,
+                                Passed = passed,
+                                Failed = failed,
+                                Warnings = warnings,
+                                Skipped = skipped,
+                                TestCount = totalTests,
+                                Inconclusive = inconclusive,
+                                TestStatus = testStatus
+                            });
+                            break;
+                    }
                 }
             }
             catch (Exception ex)
@@ -304,16 +317,16 @@ namespace NUnit.Extension.TestMonitor
                 var id = entry.GetAttribute("id");
                 var name = entry.GetAttribute("name");
                 var fullName = entry.GetAttribute("fullname");
-                var startTime = DateTime.Parse(entry.GetAttribute("start-time"));
-                var endTime = DateTime.Parse(entry.GetAttribute("end-time"));
-                var duration = TimeSpan.FromSeconds(double.Parse(entry.GetAttribute("duration")));
+                var startTime = GetDateTime(entry.GetAttribute("start-time"));
+                var endTime = GetDateTime(entry.GetAttribute("end-time"));
+                var duration = TimeSpan.FromSeconds(GetDouble(entry.GetAttribute("duration")));
                 var result = entry.GetAttribute("result") == "Passed" ? true : false;
-                var testCount = int.Parse(entry.GetAttribute("testcasecount"));
-                var inconclusive = int.Parse(entry.GetAttribute("inconclusive"));
-                var skipped = int.Parse(entry.GetAttribute("skipped"));
-                var passed = int.Parse(entry.GetAttribute("passed"));
-                var failed = int.Parse(entry.GetAttribute("failed"));
-                var asserts = int.Parse(entry.GetAttribute("asserts"));
+                var testCount = GetInteger(entry.GetAttribute("testcasecount"));
+                var inconclusive = GetInteger(entry.GetAttribute("inconclusive"));
+                var skipped = GetInteger(entry.GetAttribute("skipped"));
+                var passed = GetInteger(entry.GetAttribute("passed"));
+                var failed = GetInteger(entry.GetAttribute("failed"));
+                var asserts = GetInteger(entry.GetAttribute("asserts"));
                 var testStatus = result ? TestStatus.Pass : TestStatus.Fail;
                 var testCaseNodes = e.Report.GetElementsByTagName("test-case");
                 var testCases = new List<TestCaseReport>();
@@ -337,7 +350,7 @@ namespace NUnit.Extension.TestMonitor
                             StackTrace = failure?.SelectSingleNode("stack-trace")?.InnerText,
                             StartTime = DateTime.Parse(testCaseNode.GetAttribute("start-time")),
                             EndTime = DateTime.Parse(testCaseNode.GetAttribute("end-time")),
-                            Duration = TimeSpan.FromSeconds(double.Parse(testCaseNode.GetAttribute("duration"))),
+                            Duration = TimeSpan.FromSeconds(GetDouble(testCaseNode.GetAttribute("duration"))),
                             TestOutput = testCaseNode.SelectSingleNode("output")?.InnerText,
                             TestStatus = testResult ? TestStatus.Pass : TestStatus.Fail,
                             TestResult = testResult
@@ -416,6 +429,30 @@ namespace NUnit.Extension.TestMonitor
             {
                 _lock?.Release();
             }
+        }
+
+        private int GetInteger(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return 0;
+            int.TryParse(str, out var value);
+            return value;
+        }
+
+        private double GetDouble(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return 0;
+            double.TryParse(str, out var value);
+            return value;
+        }
+
+        private DateTime GetDateTime(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return DateTime.MinValue;
+            DateTime.TryParse(str, out var value);
+            return value;
         }
 
         public void Dispose()
