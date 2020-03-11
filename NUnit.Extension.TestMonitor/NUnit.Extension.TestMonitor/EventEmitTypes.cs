@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace NUnit.Extension.TestMonitor
 {
+    /// <summary>
+    /// The event types to emit
+    /// </summary>
     [Flags]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum EventEmitTypes

@@ -70,13 +70,12 @@ namespace NUnit.Extension.TestMonitor.IO
                 if (_serverStream?.IsConnected == true)
                 {
                     // write to a local buffer before sending out the IPC pipe. This helps to prevent partial write messages from being sent
-                    var messageLength = 0;
-                    var dataLength = 0;
+                    var lengthWithHeader = 0;
                     using (var stream = new MemoryStream(_messageBufferBytes))
                     {
                         using (var writer = new BinaryWriter(stream))
                         {
-                            messageLength = TotalHeaderLength + dataLength;
+                            lengthWithHeader = TotalHeaderLength + length;
                             // write the data length header
                             writer.Write(StartMessageHeader);
                             writer.Write((UInt32)length);
@@ -86,8 +85,7 @@ namespace NUnit.Extension.TestMonitor.IO
                         }
                     }
                     // write to the IPC named pipe
-                    _ipcWriter.Write(_messageBufferBytes, 0, messageLength);
-                    //WriteLog($"[{DateTime.Now}]|INFO|{nameof(Write)}|Wrote {textLength} bytes\r\n");
+                    _ipcWriter.Write(_messageBufferBytes, 0, lengthWithHeader);
                 }
             }
             catch (IOException ex)

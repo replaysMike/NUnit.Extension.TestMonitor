@@ -32,7 +32,7 @@ namespace NUnit.Extension.TestMonitor
         /// Event name (StartSuite, EndSuite, StartTest, EndTest, Report)
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))]
-        public EventNames Event { get; }
+        public EventNames Event { get; set; }
 
         /// <summary>
         /// Internal NUnit test id

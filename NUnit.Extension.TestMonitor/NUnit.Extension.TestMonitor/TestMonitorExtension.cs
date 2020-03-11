@@ -36,7 +36,7 @@ namespace NUnit.Extension.TestMonitor
                     StdOut = new StdOut(_configuration.EventOutputStream);
                 else
                     StdOut = new StdOut(EventOutputStreams.None);
-                var activationMessage = $"[{DateTime.Now}] NUnit.Extension.TestMonitor extension activated for run '{RuntimeInfo.Instance.TestRunId}'. ProcessInfo: {RuntimeInfo.Instance.ProcessName}|{RuntimeInfo.Instance.ProcessId}|{RuntimeInfo.Instance.ProcessSession}|{RuntimeInfo.Instance.ProcessStartTime}|{RuntimeInfo.Instance.ProcessRuntime}  EntryAssembly:{RuntimeInfo.Instance.EntryAssembly?.FullName} ExecutingAssembly: {RuntimeInfo.Instance.ExecutingAssembly?.FullName}\r\n";
+                var activationMessage = $"NUnit.Extension.TestMonitor extension activated for run '{RuntimeInfo.Instance.TestRunId}'. EventFormat: '{_configuration.EventFormat}' ProcessInfo: {RuntimeInfo.Instance.ProcessName}|{RuntimeInfo.Instance.ProcessId}|{RuntimeInfo.Instance.ProcessSession}|{RuntimeInfo.Instance.ProcessStartTime}|{RuntimeInfo.Instance.ProcessRuntime}  EntryAssembly:{RuntimeInfo.Instance.EntryAssembly?.FullName} ExecutingAssembly: {RuntimeInfo.Instance.ExecutingAssembly?.FullName}\r\n";
                 StdOut.WriteLine(activationMessage);
                 WriteLog(activationMessage);
                 _ipcServer = new IpcServer(_configuration, StdOut, RuntimeInfo.Instance.TestRunId);
@@ -45,7 +45,7 @@ namespace NUnit.Extension.TestMonitor
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(TestMonitorExtension)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(TestMonitorExtension)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -86,7 +86,7 @@ namespace NUnit.Extension.TestMonitor
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(OnTestEvent)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(OnTestEvent)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -110,7 +110,7 @@ namespace NUnit.Extension.TestMonitor
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(StartRun)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(StartRun)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -147,7 +147,7 @@ namespace NUnit.Extension.TestMonitor
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(StartSuite)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(StartSuite)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -181,12 +181,12 @@ namespace NUnit.Extension.TestMonitor
                 }
                 else
                 {
-                    WriteLog($"[{DateTime.Now}]|ERROR|{nameof(StartTest)}|Test had no data.\r\n");
+                    WriteLog($"|ERROR|{nameof(StartTest)}|Test had no data.\r\n");
                 }
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(StartTest)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(StartTest)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -264,12 +264,12 @@ namespace NUnit.Extension.TestMonitor
                 }
                 else
                 {
-                    WriteLog($"[{DateTime.Now}]|WARN|{nameof(EndTest)}|EndTest report not sent.|{e?.Report?.OuterXml}\r\n");
+                    WriteLog($"|WARN|{nameof(EndTest)}|EndTest report not sent.|{e?.Report?.OuterXml}\r\n");
                 }
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(EndTest)}|{ex.Message}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(EndTest)}|{ex.Message}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -325,7 +325,7 @@ namespace NUnit.Extension.TestMonitor
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(EndSuite)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(EndSuite)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -446,7 +446,7 @@ namespace NUnit.Extension.TestMonitor
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(EndRun)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(EndRun)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
 
@@ -498,7 +498,7 @@ namespace NUnit.Extension.TestMonitor
                 }
                 catch (Exception serializationException)
                 {
-                    WriteLog($"[{DateTime.Now}]|ERROR|{nameof(WriteEvent)}|Failed to {_configuration.EventFormat} serialize event: {serializationException.GetBaseException().Message}|{serializationException.StackTrace.ToString()}\r\n");
+                    WriteLog($"|ERROR|{nameof(WriteEvent)}|Failed to {_configuration.EventFormat} serialize event: {serializationException.GetBaseException().Message}|{serializationException.StackTrace.ToString()}\r\n");
                     return;
                 }
 
@@ -515,7 +515,7 @@ namespace NUnit.Extension.TestMonitor
                     catch (IOException ex)
                     {
                         StdOut.WriteLine($"Error writing to named pipe: {ex.GetBaseException().Message}. StackTrace: {ex.StackTrace.ToString()}");
-                        WriteLog($"[{DateTime.Now}]|ERROR|{nameof(WriteEvent)}|Error writing to named pipe: {ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                        WriteLog($"|ERROR|{nameof(WriteEvent)}|Error writing to named pipe: {ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
                     }
                 }
                 // also log data to file if configured
@@ -530,7 +530,7 @@ namespace NUnit.Extension.TestMonitor
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(WriteEvent)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(WriteEvent)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
             finally
             {
@@ -614,11 +614,11 @@ namespace NUnit.Extension.TestMonitor
                         _lock = null;
                     }
                 }
-                WriteLog($"[{DateTime.Now}] NUnit.Extension.TestMonitor extension deactivated for run {RuntimeInfo.Instance.TestRunId}.\r\n");
+                WriteLog($" NUnit.Extension.TestMonitor extension deactivated for run {RuntimeInfo.Instance.TestRunId}.\r\n");
             }
             catch (Exception ex)
             {
-                WriteLog($"[{DateTime.Now}]|ERROR|{nameof(Dispose)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
+                WriteLog($"|ERROR|{nameof(Dispose)}|{ex.GetBaseException().Message}|{ex.StackTrace.ToString()}\r\n");
             }
         }
     }
