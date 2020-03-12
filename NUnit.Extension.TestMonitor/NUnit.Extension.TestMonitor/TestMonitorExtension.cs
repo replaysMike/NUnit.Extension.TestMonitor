@@ -565,7 +565,7 @@ namespace NUnit.Extension.TestMonitor
         private void WriteLog(string text)
         {
             if (!string.IsNullOrEmpty(_configuration.EventsLogFile))
-                File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}]{text}");
+                File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}][{text.Length}]|{text}");
         }
 
         private void WriteLog(byte[] bytes, DataEvent dataEvent)
@@ -586,7 +586,7 @@ namespace NUnit.Extension.TestMonitor
                         status = dataEvent.TestStatus.ToString();
                         break;
                 }
-                File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}] {bytes.Length} bytes - {dataEvent.Event.ToString()} {(title)} {duration} {status}{Environment.NewLine}");
+                File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}][{bytes.Length}]|{dataEvent.Event.ToString()} {(title)} {duration} {status}{Environment.NewLine}");
             }
         }
 
