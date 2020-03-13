@@ -37,10 +37,11 @@ namespace NUnit.Extension.TestMonitor.IO
             _serverStream = new NamedPipeServerStream(nameof(TestMonitorExtension), PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, BufferSize, BufferSize);
             _ipcWriter = new BinaryWriter(_serverStream, Encoding.Default);
             var connectionResult = _serverStream.BeginWaitForConnection((ar) => HandleConnection(ar), null);
-            if (!_connectionEvent.WaitOne(_configuration.NamedPipesConnectionTimeoutMilliseconds))
+            var timeout = TimeSpan.FromSeconds(_configuration.NamedPipesConnectionTimeoutSeconds);
+            if (!_connectionEvent.WaitOne((int)timeout.TotalMilliseconds))
             {
                 // timeout waiting for connecting client
-                var timeoutMessage = $"Timeout ({TimeSpan.FromSeconds(_configuration.NamedPipesConnectionTimeoutMilliseconds)}) waiting for NamedPipe client to connect!";
+                var timeoutMessage = $"Timeout ({timeout}) waiting for NamedPipe client to connect!";
                 StdOut.WriteLine(timeoutMessage);
                 WriteLog(timeoutMessage);
                 _serverStream.Dispose();

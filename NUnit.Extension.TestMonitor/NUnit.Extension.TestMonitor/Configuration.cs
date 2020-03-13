@@ -30,6 +30,6 @@ namespace NUnit.Extension.TestMonitor
         /// <summary>
         /// The timeout (in seconds) to wait for a Named Pipe client connection
         /// </summary>
-        public int NamedPipesConnectionTimeoutMilliseconds { get; set; } = DefaultNamedPipesConnectionTimeoutMilliseconds;
+        public int NamedPipesConnectionTimeoutSeconds { get; set; } = DefaultNamedPipesConnectionTimeoutMilliseconds;
     }
 }
