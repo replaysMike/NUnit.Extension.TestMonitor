@@ -38,7 +38,9 @@ namespace NUnit.Extension.TestMonitor
                     StdOut = new StdOut(EventOutputStreams.None);
                 var activationMessage = $"NUnit.Extension.TestMonitor extension activated for run '{RuntimeInfo.Instance.TestRunId}'. EventFormat: '{_configuration.EventFormat}' ProcessInfo: {RuntimeInfo.Instance.ProcessName}|{RuntimeInfo.Instance.ProcessId}|{RuntimeInfo.Instance.ProcessSession}|{RuntimeInfo.Instance.ProcessStartTime}|{RuntimeInfo.Instance.ProcessRuntime}  EntryAssembly:{RuntimeInfo.Instance.EntryAssembly?.FullName} ExecutingAssembly: {RuntimeInfo.Instance.ExecutingAssembly?.FullName}\r\n";
                 StdOut.WriteLine(activationMessage);
+
                 WriteLog(activationMessage);
+
                 _ipcServer = new IpcServer(_configuration, StdOut, RuntimeInfo.Instance.TestRunId);
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes))
                     _ipcServer.Start();
@@ -142,9 +144,9 @@ namespace NUnit.Extension.TestMonitor
                                 TestStatus = TestStatus.Running
                             });
                             break;
-                        case "TestSuite":
-                            StdOut.WriteLine($"[StartSuite] {name}");
-                            WriteEvent(new DataEvent(EventNames.StartSuite)
+                        case "TestFixture":
+                            StdOut.WriteLine($"[StartTestFixture] {name}");
+                            WriteEvent(new DataEvent(EventNames.StartTestFixture)
                             {
                                 Id = id,
                                 ParentId = parentId,
@@ -156,9 +158,11 @@ namespace NUnit.Extension.TestMonitor
                                 TestStatus = TestStatus.Running
                             });
                             break;
-                        case "TestFixture":
-                            StdOut.WriteLine($"[StartTestFixture] {name}");
-                            WriteEvent(new DataEvent(EventNames.StartTestFixture)
+                        case "TestSuite":
+                        // older versions (3.4.1) of nUnit dont provide a type on the start event, must have been a bug as the end events are correct
+                        default:
+                            StdOut.WriteLine($"[StartSuite] {name}");
+                            WriteEvent(new DataEvent(EventNames.StartSuite)
                             {
                                 Id = id,
                                 ParentId = parentId,
@@ -600,14 +604,10 @@ namespace NUnit.Extension.TestMonitor
                     }
                 }
                 // also log data to file if configured
-                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile)
-                    && !string.IsNullOrEmpty(_configuration.EventsLogFile))
-                {
-                    if (serializedBytes != null)
-                        WriteLog(serializedBytes, dataEvent);
-                    else if (!string.IsNullOrEmpty(serializedString))
-                        WriteLog(serializedString);
-                }
+                if (serializedBytes != null)
+                    WriteLog(serializedBytes, dataEvent);
+                else
+                    WriteLog(serializedString);
             }
             catch (Exception ex)
             {
@@ -645,7 +645,7 @@ namespace NUnit.Extension.TestMonitor
 
         private void WriteLog(string text)
         {
-            if (!string.IsNullOrEmpty(_configuration.EventsLogFile))
+            if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile)  && !string.IsNullOrEmpty(_configuration.EventsLogFile))
                 File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}][{text.Length}]|{text}");
         }
 
