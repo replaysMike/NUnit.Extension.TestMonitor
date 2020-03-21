@@ -359,9 +359,9 @@ namespace NUnit.Extension.TestMonitor
                                 TestStatus = testStatus
                             });
                             break;
-                        case "TestSuite":
-                            StdOut.WriteLine($"[EndSuite] '{name}' completed in {duration}. {passed} passed {failed} failures");
-                            WriteEvent(new DataEvent(EventNames.EndSuite)
+                        case "TestFixture":
+                            StdOut.WriteLine($"[EndTestFixture] '{name}' completed in {duration}. {passed} passed {failed} failures");
+                            WriteEvent(new DataEvent(EventNames.EndTestFixture)
                             {
                                 Id = id,
                                 TestRunId = RuntimeInfo.Instance.TestRunId,
@@ -382,9 +382,11 @@ namespace NUnit.Extension.TestMonitor
                                 TestStatus = testStatus
                             });
                             break;
-                        case "TestFixture":
-                            StdOut.WriteLine($"[EndTestFixture] '{name}' completed in {duration}. {passed} passed {failed} failures");
-                            WriteEvent(new DataEvent(EventNames.EndTestFixture)
+                        case "TestSuite":
+                        // older versions (3.4.1) of nUnit dont provide a type on the start event, must have been a bug as the end events are correct
+                        default:
+                            StdOut.WriteLine($"[EndSuite] '{name}' completed in {duration}. {passed} passed {failed} failures");
+                            WriteEvent(new DataEvent(EventNames.EndSuite)
                             {
                                 Id = id,
                                 TestRunId = RuntimeInfo.Instance.TestRunId,
