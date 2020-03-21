@@ -123,21 +123,49 @@ namespace NUnit.Extension.TestMonitor
                     var entry = e.Report.FirstChild;
                     var id = entry.GetAttribute("id");
                     var parentId = entry.GetAttribute("parentId");
-                    var suiteName = entry.GetAttribute("name");
-                    var suiteFullName = entry.GetAttribute("fullname");
+                    var name = entry.GetAttribute("name");
+                    var fullName = entry.GetAttribute("fullname");
                     var type = entry.GetAttribute("type");
                     switch (type)
                     {
-                        case "TestFixture":
-                            StdOut.WriteLine($"[StartSuite] {suiteName}");
+                        case "Assembly":
+                            StdOut.WriteLine($"[StartAssembly] {name}");
+                            WriteEvent(new DataEvent(EventNames.StartAssembly)
+                            {
+                                Id = id,
+                                ParentId = parentId,
+                                TestRunId = RuntimeInfo.Instance.TestRunId,
+                                TestRunner = RuntimeInfo.Instance.ProcessName,
+                                TestSuite = name,
+                                FullName = fullName,
+                                StartTime = DateTime.Now,
+                                TestStatus = TestStatus.Running
+                            });
+                            break;
+                        case "TestSuite":
+                            StdOut.WriteLine($"[StartSuite] {name}");
                             WriteEvent(new DataEvent(EventNames.StartSuite)
                             {
                                 Id = id,
                                 ParentId = parentId,
                                 TestRunId = RuntimeInfo.Instance.TestRunId,
                                 TestRunner = RuntimeInfo.Instance.ProcessName,
-                                TestSuite = suiteName,
-                                FullName = suiteFullName,
+                                TestSuite = name,
+                                FullName = fullName,
+                                StartTime = DateTime.Now,
+                                TestStatus = TestStatus.Running
+                            });
+                            break;
+                        case "TestFixture":
+                            StdOut.WriteLine($"[StartTestFixture] {name}");
+                            WriteEvent(new DataEvent(EventNames.StartTestFixture)
+                            {
+                                Id = id,
+                                ParentId = parentId,
+                                TestRunId = RuntimeInfo.Instance.TestRunId,
+                                TestRunner = RuntimeInfo.Instance.ProcessName,
+                                TestSuite = name,
+                                FullName = fullName,
                                 StartTime = DateTime.Now,
                                 TestStatus = TestStatus.Running
                             });
@@ -288,24 +316,53 @@ namespace NUnit.Extension.TestMonitor
                     var endTime = GetDateTime(entry.GetAttribute("end-time"));
                     var duration = TimeSpan.FromSeconds(GetDouble(entry.GetAttribute("duration")));
                     var result = entry.GetAttribute("result") == "Passed" ? true : false;
+                    var testCaseCount = GetInteger(entry.GetAttribute("testcasecount"));
                     var totalTests = GetInteger(entry.GetAttribute("total"));
                     var warnings = GetInteger(entry.GetAttribute("warnings"));
                     var inconclusive = GetInteger(entry.GetAttribute("inconclusive"));
                     var skipped = GetInteger(entry.GetAttribute("skipped"));
                     var passed = GetInteger(entry.GetAttribute("passed"));
                     var failed = GetInteger(entry.GetAttribute("failed"));
+                    var properties = entry.SelectSingleNode("properties");
+                    var processId = GetInteger(properties?.SelectSingleNode("property[@name='_PID']")?.GetAttribute("value"));
+                    var appDomain = properties?.SelectSingleNode("property[@name='_APPDOMAIN']")?.GetAttribute("value");
                     var testStatus = result ? TestStatus.Pass : TestStatus.Fail;
 
                     switch (type)
                     {
-                        case "TestMethod":
+                        case "Assembly":
+                            StdOut.WriteLine($"[EndAssembly] '{name}' completed in {duration}. {passed} passed {failed} failures");
+                            WriteEvent(new DataEvent(EventNames.EndAssembly)
+                            {
+                                Id = id,
+                                TestRunId = RuntimeInfo.Instance.TestRunId,
+                                TestRunner = RuntimeInfo.Instance.ProcessName,
+                                TestSuite = name,
+                                FullName = fullName,
+                                StartTime = startTime,
+                                EndTime = endTime,
+                                ProcessId = processId,
+                                AppDomain = appDomain,
+                                Duration = duration,
+                                TestResult = result,
+                                Passed = passed,
+                                Failed = failed,
+                                Warnings = warnings,
+                                Skipped = skipped,
+                                TestCases = testCaseCount,
+                                TestCount = totalTests,
+                                Inconclusive = inconclusive,
+                                TestStatus = testStatus
+                            });
+                            break;
+                        case "TestSuite":
                             StdOut.WriteLine($"[EndSuite] '{name}' completed in {duration}. {passed} passed {failed} failures");
                             WriteEvent(new DataEvent(EventNames.EndSuite)
                             {
                                 Id = id,
                                 TestRunId = RuntimeInfo.Instance.TestRunId,
                                 TestRunner = RuntimeInfo.Instance.ProcessName,
-                                TestName = name,
+                                TestSuite = name,
                                 FullName = fullName,
                                 StartTime = startTime,
                                 EndTime = endTime,
@@ -315,6 +372,30 @@ namespace NUnit.Extension.TestMonitor
                                 Failed = failed,
                                 Warnings = warnings,
                                 Skipped = skipped,
+                                TestCases = testCaseCount,
+                                TestCount = totalTests,
+                                Inconclusive = inconclusive,
+                                TestStatus = testStatus
+                            });
+                            break;
+                        case "TestFixture":
+                            StdOut.WriteLine($"[EndTestFixture] '{name}' completed in {duration}. {passed} passed {failed} failures");
+                            WriteEvent(new DataEvent(EventNames.EndTestFixture)
+                            {
+                                Id = id,
+                                TestRunId = RuntimeInfo.Instance.TestRunId,
+                                TestRunner = RuntimeInfo.Instance.ProcessName,
+                                TestSuite = name,
+                                FullName = fullName,
+                                StartTime = startTime,
+                                EndTime = endTime,
+                                Duration = duration,
+                                TestResult = result,
+                                Passed = passed,
+                                Failed = failed,
+                                Warnings = warnings,
+                                Skipped = skipped,
+                                TestCases = testCaseCount,
                                 TestCount = totalTests,
                                 Inconclusive = inconclusive,
                                 TestStatus = testStatus

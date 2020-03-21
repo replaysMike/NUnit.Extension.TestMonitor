@@ -60,6 +60,16 @@ namespace NUnit.Extension.TestMonitor
         public string FullName { get; set; }
 
         /// <summary>
+        /// Process id, for Event=EndAssembly
+        /// </summary>
+        public int ProcessId { get; set; }
+
+        /// <summary>
+        /// Application domain, for Event=EndAssembly
+        /// </summary>
+        public string AppDomain { get; set; }
+
+        /// <summary>
         /// Test type
         /// </summary>
         public string TestType { get; set; }
@@ -119,6 +129,11 @@ namespace NUnit.Extension.TestMonitor
         /// Total number of tests run
         /// </summary>
         public int TestCount { get; set; }
+
+        /// <summary>
+        /// Total number of test cases registered
+        /// </summary>
+        public int TestCases { get; set; }
 
         /// <summary>
         /// Total number of assertions
