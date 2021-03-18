@@ -16,19 +16,18 @@ namespace NUnit.Extension.TestMonitor.Tests
         {
             TestContext.WriteLine($"Running {nameof(Should_Test1_Work)}");
             await Task.Delay(1 * 1000);
-            if (true)
-                Assert.AreEqual(true, true);
-            else
+#if RANDOMFAILURES
+            // enable this for random failures
+            using (var rg = new RNGCryptoServiceProvider())
             {
-                // enable this for random failures
-                using (var rg = new RNGCryptoServiceProvider())
-                {
-                    byte[] rno = new byte[5];
-                    rg.GetBytes(rno);
-                    var val = BitConverter.ToInt32(rno, 0);
-                    Assert.AreEqual(0, val % 2, "Random test failure");
-                }
+                byte[] rno = new byte[5];
+                rg.GetBytes(rno);
+                var val = BitConverter.ToInt32(rno, 0);
+                Assert.AreEqual(0, val % 2, "Random test failure");
             }
+#else
+            Assert.AreEqual(true, true);
+#endif
         }
 
         [Test]
