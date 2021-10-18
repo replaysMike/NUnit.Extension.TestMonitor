@@ -1,6 +1,8 @@
 ﻿using NUnit.Framework;
+#if RANDOMFAILURES
 using System;
 using System.Security.Cryptography;
+#endif
 using System.Threading.Tasks;
 
 namespace NUnit.Extension.TestMonitor.Tests

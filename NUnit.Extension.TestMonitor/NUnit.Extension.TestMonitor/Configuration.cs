@@ -31,5 +31,11 @@ namespace NUnit.Extension.TestMonitor
         /// The timeout (in seconds) to wait for a Named Pipe client connection
         /// </summary>
         public int NamedPipesConnectionTimeoutSeconds { get; set; } = DefaultNamedPipesConnectionTimeoutMilliseconds;
+
+        /// <summary>
+        /// Specify which launchers the extension will work for.
+        /// If tests are launched by other launchers, the extension will disable waiting for connections.
+        /// </summary>
+        public string SupportedRunnerExe { get; set; } = "NUnit.Commander.exe";
     }
 }

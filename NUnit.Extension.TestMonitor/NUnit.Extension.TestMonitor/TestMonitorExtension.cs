@@ -5,7 +5,9 @@ using NUnit.Extension.TestMonitor.IO;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
@@ -19,9 +21,9 @@ namespace NUnit.Extension.TestMonitor
     public class TestMonitorExtension : ITestEventListener, IDisposable
     {
         private SemaphoreSlim _lock;
-        private ConfigurationResolver _configurationResolver;
-        private Configuration _configuration;
-        private IpcServer _ipcServer;
+        private readonly ConfigurationResolver _configurationResolver;
+        private readonly Configuration _configuration;
+        private readonly IpcServer _ipcServer;
 
         private StdOut StdOut { get; }
 
@@ -36,6 +38,17 @@ namespace NUnit.Extension.TestMonitor
                     StdOut = new StdOut(_configuration.EventOutputStream);
                 else
                     StdOut = new StdOut(EventOutputStreams.None);
+
+                // check for the existence of a known runner. If one is specified in the config, and it's currently running then continue
+                if (!string.IsNullOrWhiteSpace(_configuration.SupportedRunnerExe))
+                {
+                    if (!CheckForKnownRunner(_configuration.SupportedRunnerExe))
+                    {
+                        // create no IPC server, extension will ignore incoming messages
+                        WriteLog($"|WARN|{nameof(TestMonitorExtension)}|Aborting extension registration, supported test runner not found.\r\n");
+                        return;
+                    }
+                }
 
                 // ensure path to log file exists
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
@@ -58,6 +71,9 @@ namespace NUnit.Extension.TestMonitor
 
         public void OnTestEvent(string report)
         {
+            // if no ipc server exists, ignore incoming messages
+            if (_ipcServer == null)
+                return;
             try
             {
                 // StdOut.WriteLine($"Test event: {report}");
@@ -624,6 +640,19 @@ namespace NUnit.Extension.TestMonitor
             {
                 _lock?.Release();
             }
+        }
+
+        private bool CheckForKnownRunner(string runnerExe)
+        {
+            try
+            {
+                return Process.GetProcessesByName(runnerExe).Any();
+            }
+            catch (InvalidOperationException ex)
+            {
+                WriteLog($"|ERROR|{nameof(WriteEvent)}|Could not check for the presence of the test runner named '{runnerExe}'. {ex.GetBaseException().Message}|{ex.StackTrace}\r\n");
+            }
+            return false;
         }
 
         private int GetInteger(string str)
