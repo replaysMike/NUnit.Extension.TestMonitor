@@ -35,6 +35,7 @@ namespace NUnit.Extension.TestMonitor
         /// <summary>
         /// Specify which launchers the extension will work for.
         /// If tests are launched by other launchers, the extension will disable waiting for connections.
+        /// Default: NUnit.Commander.exe
         /// </summary>
         public string SupportedRunnerExe { get; set; } = "NUnit.Commander.exe";
     }

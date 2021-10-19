@@ -646,7 +646,9 @@ namespace NUnit.Extension.TestMonitor
         {
             try
             {
-                return Process.GetProcessesByName(runnerExe).Any();
+                var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(runnerExe));
+                WriteLog($"|INFO|{nameof(TestMonitorExtension)}|Number of matching processes named '{runnerExe}': {processes.Length}\r\n");
+                return processes.Any();
             }
             catch (InvalidOperationException ex)
             {
