@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnit.Extension.TestMonitor", "NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.csproj", "{85DB35FA-4DF6-42D5-937A-6059584DC31E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NUnit.Extension.TestMonitor", "NUnit.Extension.TestMonitor\NUnit.Extension.TestMonitor.csproj", "{85DB35FA-4DF6-42D5-937A-6059584DC31E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnit.Extension.TestMonitor.Tests", "NUnit.Extension.TestMonitor.Tests\NUnit.Extension.TestMonitor.Tests.csproj", "{4675233E-5348-497A-85B0-D4073B488244}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NUnit.Extension.TestMonitor.Tests", "NUnit.Extension.TestMonitor.Tests\NUnit.Extension.TestMonitor.Tests.csproj", "{4675233E-5348-497A-85B0-D4073B488244}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
