@@ -23,7 +23,7 @@
 		<LangVersion>latest</LangVersion>
 		<PackageIcon>icon.png</PackageIcon>
 		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>..\NUnitExtensionTestMonitorStrongNameKey.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>..\NUnitExtensionTestMonitor.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
 	<ItemGroup>
