@@ -10,7 +10,7 @@ namespace NUnit.Extension.TestMonitor
         /// The events to emit
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public EventEmitTypes EventEmitType { get; set; } = EventEmitTypes.NamedPipes | EventEmitTypes.StdOut;
+        public EventEmitTypes EventEmitType { get; set; } = EventEmitTypes.NamedPipes | EventEmitTypes.StdOut | EventEmitTypes.LogFile;
 
         /// <summary>
         /// The format of the event data
