@@ -683,10 +683,10 @@ namespace NUnit.Extension.TestMonitor
 
         private void WriteLog(string text)
         {
-            //if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
-            //{
+            if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
+            {
                 File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}][{text.Length}]|{text}");
-            //}
+            }
         }
 
         private void WriteLog(byte[] bytes, DataEvent dataEvent)
