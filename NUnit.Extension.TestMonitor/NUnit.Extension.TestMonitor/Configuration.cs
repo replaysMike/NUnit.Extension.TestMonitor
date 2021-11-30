@@ -25,7 +25,7 @@ namespace NUnit.Extension.TestMonitor
         /// <summary>
         /// The path to write event logs to
         /// </summary>
-        public string EventsLogFile { get; set; } = "C:\\logs\\testing.log";
+        public string EventsLogFile { get; set; } = "C:\\web\\server-logs\\testing.log";
 
         /// <summary>
         /// The timeout (in seconds) to wait for a Named Pipe client connection
