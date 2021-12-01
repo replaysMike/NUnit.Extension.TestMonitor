@@ -22,6 +22,10 @@ namespace NUnit.Extension.TestMonitor
         /// <summary>
         /// Send events to log file
         /// </summary>
-        LogFile = 1 << 3
+        LogFile = 1 << 3,
+        /// <summary>
+        /// Send events to Grpc server
+        /// </summary>
+        Grpc = 1 << 4,
     }
 }

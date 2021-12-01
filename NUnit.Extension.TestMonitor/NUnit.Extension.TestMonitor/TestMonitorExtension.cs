@@ -17,13 +17,14 @@ namespace NUnit.Extension.TestMonitor
     /// <summary>
     /// Provides a real-time reporting mechanism through IPC and Standard in/out
     /// </summary>
-    [Extension(Description = "Provides Test event monitoring and logging", EngineVersion = "3.11.1")]
+    [Extension(Description = "Provides Test event monitoring and logging", EngineVersion = "3.4")]
     public class TestMonitorExtension : ITestEventListener, IDisposable
     {
         private SemaphoreSlim _lock;
         private readonly ConfigurationResolver _configurationResolver;
         private readonly Configuration _configuration;
         private readonly IpcServer _ipcServer;
+        private readonly GrpcClient _grpcClient;
 
         private StdOut StdOut { get; }
 
@@ -59,9 +60,16 @@ namespace NUnit.Extension.TestMonitor
 
                 WriteLog(activationMessage);
 
-                _ipcServer = new IpcServer(_configuration, StdOut, RuntimeInfo.Instance.TestRunId);
+                // submit events to Grpc server
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.Grpc))
+                    _grpcClient = new GrpcClient(_configuration);
+
+                // submit events to IpcServer
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes))
+                {
+                    _ipcServer = new IpcServer(_configuration, StdOut, RuntimeInfo.Instance.TestRunId);
                     _ipcServer.Start();
+                }
             }
             catch (Exception ex)
             {
@@ -71,8 +79,8 @@ namespace NUnit.Extension.TestMonitor
 
         public void OnTestEvent(string report)
         {
-            // if no ipc server exists, ignore incoming messages
-            if (_ipcServer == null)
+            // if not sending events anywhere, ignore incoming messages
+            if (_ipcServer == null && _grpcClient == null)
                 return;
             try
             {
@@ -624,6 +632,18 @@ namespace NUnit.Extension.TestMonitor
                     {
                         StdOut.WriteLine($"Error writing to named pipe: {ex.GetBaseException().Message}. StackTrace: {ex.StackTrace}");
                         WriteLog($"|ERROR|{nameof(WriteEvent)}|Error writing to named pipe: {ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
+                    }
+                }
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.Grpc) && _grpcClient != null)
+                {
+                    try
+                    {
+                        _grpcClient.WriteTestEvent(serializedString);
+                    }
+                    catch (Exception ex)
+                    {
+                        StdOut.WriteLine($"Error writing to Grpc server: {ex.GetBaseException().Message}. StackTrace: {ex.StackTrace}");
+                        WriteLog($"|ERROR|{nameof(WriteEvent)}|Error writing to Grpc server: {ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
                     }
                 }
                 // also log data to file if configured

@@ -7,10 +7,15 @@ namespace NUnit.Extension.TestMonitor
         public const int DefaultNamedPipesConnectionTimeoutMilliseconds = 5000;
 
         /// <summary>
+        /// Port number to send test events to
+        /// </summary>
+        public int Port { get;set;} = 35001;
+
+        /// <summary>
         /// The events to emit
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public EventEmitTypes EventEmitType { get; set; } = EventEmitTypes.NamedPipes | EventEmitTypes.StdOut | EventEmitTypes.LogFile;
+        public EventEmitTypes EventEmitType { get; set; } = EventEmitTypes.Grpc | EventEmitTypes.StdOut | EventEmitTypes.LogFile;
 
         /// <summary>
         /// The format of the event data
