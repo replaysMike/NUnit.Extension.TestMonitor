@@ -4,7 +4,7 @@ namespace NUnit.Extension.TestMonitor
 {
     public class Configuration
     {
-        public const int DefaultNamedPipesConnectionTimeoutMilliseconds = 5000;
+        public const int DefaultNamedPipesConnectionTimeoutMilliseconds = 2000;
 
         /// <summary>
         /// Port number to send test events to
@@ -35,7 +35,7 @@ namespace NUnit.Extension.TestMonitor
         /// <summary>
         /// The timeout (in seconds) to wait for a Named Pipe client connection
         /// </summary>
-        public int NamedPipesConnectionTimeoutSeconds { get; set; } = DefaultNamedPipesConnectionTimeoutMilliseconds;
+        public int NamedPipesConnectionTimeoutMilliseconds { get; set; } = DefaultNamedPipesConnectionTimeoutMilliseconds;
 
         /// <summary>
         /// Specify which launchers the extension will work for.

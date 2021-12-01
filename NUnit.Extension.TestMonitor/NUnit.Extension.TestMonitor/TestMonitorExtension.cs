@@ -23,8 +23,10 @@ namespace NUnit.Extension.TestMonitor
         private SemaphoreSlim _lock;
         private readonly ConfigurationResolver _configurationResolver;
         private readonly Configuration _configuration;
-        private readonly IpcServer _ipcServer;
+        private readonly IpcClient _ipcClient;
+#if GRPC
         private readonly GrpcClient _grpcClient;
+#endif
 
         private StdOut StdOut { get; }
 
@@ -61,14 +63,16 @@ namespace NUnit.Extension.TestMonitor
                 WriteLog(activationMessage);
 
                 // submit events to Grpc server
+#if GRPC
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.Grpc))
                     _grpcClient = new GrpcClient(_configuration);
+#endif
 
                 // submit events to IpcServer
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes))
                 {
-                    _ipcServer = new IpcServer(_configuration, StdOut, RuntimeInfo.Instance.TestRunId);
-                    _ipcServer.Start();
+                    _ipcClient = new IpcClient(_configuration);
+                    _ipcClient.Connect((client) => { }, (client) => { });
                 }
             }
             catch (Exception ex)
@@ -80,8 +84,13 @@ namespace NUnit.Extension.TestMonitor
         public void OnTestEvent(string report)
         {
             // if not sending events anywhere, ignore incoming messages
-            if (_ipcServer == null && _grpcClient == null)
+#if GRPC
+            if (_ipcClient == null && _grpcClient == null)
                 return;
+#else
+            if (_ipcClient == null)
+                return;
+#endif
             try
             {
                 // StdOut.WriteLine($"Test event: {report}");
@@ -619,14 +628,14 @@ namespace NUnit.Extension.TestMonitor
                 }
 
                 // emit serialized data over IPC/Named pipes
-                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes) && _ipcServer != null)
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes) && _ipcClient != null)
                 {
                     try
                     {
                         if (serializedBytes != null)
-                            _ipcServer.Write(serializedBytes, 0, serializedBytes.Length);
+                            _ipcClient.Write(serializedBytes, 0, serializedBytes.Length);
                         else if (!string.IsNullOrEmpty(serializedString))
-                            _ipcServer.Write(serializedString);
+                            _ipcClient.Write(serializedString);
                     }
                     catch (IOException ex)
                     {
@@ -634,6 +643,7 @@ namespace NUnit.Extension.TestMonitor
                         WriteLog($"|ERROR|{nameof(WriteEvent)}|Error writing to named pipe: {ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
                     }
                 }
+#if GRPC
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.Grpc) && _grpcClient != null)
                 {
                     try
@@ -646,6 +656,8 @@ namespace NUnit.Extension.TestMonitor
                         WriteLog($"|ERROR|{nameof(WriteEvent)}|Error writing to Grpc server: {ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
                     }
                 }
+#endif
+
                 // also log data to file if configured
                 if (serializedBytes != null)
                     WriteLog(serializedBytes, dataEvent);
@@ -763,7 +775,7 @@ namespace NUnit.Extension.TestMonitor
                     _lock?.Wait();
                     try
                     {
-                        _ipcServer?.Dispose();
+                        _ipcClient?.Dispose();
                     }
                     finally
                     {

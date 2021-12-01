@@ -1,4 +1,6 @@
-﻿using Grpc.Core;
+﻿#if GRPC
+using Grpc.Core;
+#endif
 using System;
 using System.Threading.Tasks;
 
@@ -9,10 +11,11 @@ namespace NUnit.Extension.TestMonitor.IO
     /// </summary>
     internal class GrpcClient
     {
+#if GRPC
         private const string GrpcServer = "127.0.0.1";
+        private readonly Configuration _configuration;
         private readonly TestEventService1.TestEvent.TestEventClient _client;
         private readonly Channel _channel;
-        private readonly Configuration _configuration;
 
         public GrpcClient(Configuration configuration)
         {
@@ -50,5 +53,6 @@ namespace NUnit.Extension.TestMonitor.IO
             };
             await _client.WriteTestEventAsync(request);
         }
+#endif
     }
 }

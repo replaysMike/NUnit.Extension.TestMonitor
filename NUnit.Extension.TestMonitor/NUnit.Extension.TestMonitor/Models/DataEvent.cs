@@ -165,6 +165,12 @@ namespace NUnit.Extension.TestMonitor
         /// </summary>
         public DataReport Report { get; set; }
 
+        /// <summary>
+        /// The commander run number
+        /// </summary>
+        [ProtoIgnore]
+        public int RunNumber { get; set; }
+
         public DataEvent() { }
 
         public DataEvent(EventNames eventName)

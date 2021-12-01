@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net48;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
 		<Product>NUnit.Extension.TestMonitor</Product>
 		<ProductName>NUnit.Extension.TestMonitor</ProductName>
 		<Authors>Michael Brown</Authors>
@@ -27,6 +27,10 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'net6.0'">
+    <DefineConstants>$(DefineConstants);GRPC</DefineConstants>
+  </PropertyGroup>
+
 	<ItemGroup>
 		<None Include="icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
@@ -40,7 +44,6 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive; compile</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Grpc.Core" Version="2.42.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" PrivateAssets="all" />
@@ -48,6 +51,10 @@
 		<PackageReference Include="NUnit" Version="3.13.2" PrivateAssets="all" />
 		<PackageReference Include="NUnit.Engine" Version="3.11.1" />
 		<PackageReference Include="protobuf-net" Version="3.0.101" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'net6.0'">
+    <PackageReference Include="Grpc.Core" Version="2.42.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.40.0" />
   </ItemGroup>
 
