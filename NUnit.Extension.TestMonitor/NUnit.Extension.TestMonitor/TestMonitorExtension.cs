@@ -37,10 +37,15 @@ namespace NUnit.Extension.TestMonitor
                 _lock = new SemaphoreSlim(1, 1);
                 _configurationResolver = new ConfigurationResolver(new RuntimeDetection());
                 _configuration = _configurationResolver.GetConfiguration();
+                if (_configuration == null) throw new ExtensionException("Could not resolve a valid configuration!");
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.StdOut))
                     StdOut = new StdOut(_configuration.EventOutputStream);
                 else
                     StdOut = new StdOut(EventOutputStreams.None);
+
+                // ensure path to log file exists
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
+                    EnsurePathExists(_configuration.EventsLogFile);
 
                 // check for the existence of a known runner. If one is specified in the config, and it's currently running then continue
                 if (!string.IsNullOrWhiteSpace(_configuration.SupportedRunnerExe))
@@ -53,10 +58,6 @@ namespace NUnit.Extension.TestMonitor
                     }
                 }
 
-                // ensure path to log file exists
-                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
-                    EnsurePathExists(_configuration.EventsLogFile);
-
                 var activationMessage = $"NUnit.Extension.TestMonitor extension activated for run '{RuntimeInfo.Instance.TestRunId}'. EventFormat: '{_configuration.EventFormat}' ProcessInfo: {RuntimeInfo.Instance.ProcessName}|{RuntimeInfo.Instance.ProcessId}|{RuntimeInfo.Instance.ProcessSession}|{RuntimeInfo.Instance.ProcessStartTime}|{RuntimeInfo.Instance.ProcessRuntime}  EntryAssembly:{RuntimeInfo.Instance.EntryAssembly?.FullName} ExecutingAssembly: {RuntimeInfo.Instance.ExecutingAssembly?.FullName}{Environment.NewLine}";
                 StdOut.WriteLine(activationMessage);
 
@@ -65,19 +66,31 @@ namespace NUnit.Extension.TestMonitor
                 // submit events to Grpc server
 #if GRPC
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.Grpc))
+                {
+                    WriteLog($"|INFO|{nameof(TestMonitorExtension)}|Connecting to Grpc server...{Environment.NewLine}");
                     _grpcClient = new GrpcClient(_configuration);
+                }
 #endif
 
                 // submit events to IpcServer
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes))
                 {
+                    WriteLog($"|INFO|{nameof(TestMonitorExtension)}|Connecting to local Ipc server...{Environment.NewLine}");
                     _ipcClient = new IpcClient(_configuration);
-                    _ipcClient.Connect((client) => { }, (client) => { });
+                    _ipcClient.Connect((client) =>
+                    {
+                        WriteLog($"|INFO|{nameof(TestMonitorExtension)}|Connected to local Ipc server.{Environment.NewLine}");
+                    }, (client) =>
+                    {
+                        WriteLog($"|WARN|{nameof(TestMonitorExtension)}|Failed to connect to local Ipc server!{Environment.NewLine}");
+                    });
                 }
             }
             catch (Exception ex)
             {
-                WriteLog($"|ERROR|{nameof(TestMonitorExtension)}|{ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
+                if (_configuration != null)
+                    WriteLog($"|ERROR|{nameof(TestMonitorExtension)}|{ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
+                throw new ExtensionException($"Fatal exception: {ex.GetBaseException().Message}|{ex.StackTrace}");
             }
         }
 
@@ -715,6 +728,11 @@ namespace NUnit.Extension.TestMonitor
 
         private void WriteLog(string text)
         {
+            if (_configuration == null)
+            {
+                throw new ArgumentNullException($"{nameof(_configuration)} is null!");
+            }
+
             if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
             {
                 File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}][{text.Length}]|{text}");

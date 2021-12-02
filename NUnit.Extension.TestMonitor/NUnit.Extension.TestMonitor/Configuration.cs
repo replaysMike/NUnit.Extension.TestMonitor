@@ -15,7 +15,7 @@ namespace NUnit.Extension.TestMonitor
         /// The events to emit
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public EventEmitTypes EventEmitType { get; set; } = EventEmitTypes.Grpc | EventEmitTypes.StdOut | EventEmitTypes.LogFile;
+        public EventEmitTypes EventEmitType { get; set; } = EventEmitTypes.Grpc | EventEmitTypes.StdOut;
 
         /// <summary>
         /// The format of the event data

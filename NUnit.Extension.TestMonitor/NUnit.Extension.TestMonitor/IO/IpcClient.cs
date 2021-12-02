@@ -39,7 +39,7 @@ namespace NUnit.Extension.TestMonitor.IO
         public void Connect(Action<IpcClient> onSuccessConnect, Action<IpcClient> onFailedConnect)
         {
             if (_isDisposed) throw new ObjectDisposedException($"Cannot {nameof(Connect)}() a disposed client!");
-            _client = new NamedPipeClientStream(".", "Commander", PipeDirection.InOut);
+            _client = new NamedPipeClientStream(".", "Commander", PipeDirection.Out, PipeOptions.Asynchronous);
             try
             {
                 IsWaitingForConnection = true;
