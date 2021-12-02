@@ -17,13 +17,16 @@ namespace NUnit.Extension.TestMonitor
     /// <summary>
     /// Provides a real-time reporting mechanism through IPC and Standard in/out
     /// </summary>
-    [Extension(Description = "Provides Test event monitoring and logging", EngineVersion = "3.11.1")]
+    [Extension(Description = "Provides Test event monitoring and logging", EngineVersion = "3.4")]
     public class TestMonitorExtension : ITestEventListener, IDisposable
     {
         private SemaphoreSlim _lock;
         private readonly ConfigurationResolver _configurationResolver;
         private readonly Configuration _configuration;
-        private readonly IpcServer _ipcServer;
+        private readonly IpcClient _ipcClient;
+#if GRPC
+        private readonly GrpcClient _grpcClient;
+#endif
 
         private StdOut StdOut { get; }
 
@@ -34,10 +37,15 @@ namespace NUnit.Extension.TestMonitor
                 _lock = new SemaphoreSlim(1, 1);
                 _configurationResolver = new ConfigurationResolver(new RuntimeDetection());
                 _configuration = _configurationResolver.GetConfiguration();
+                if (_configuration == null) throw new ExtensionException("Could not resolve a valid configuration!");
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.StdOut))
                     StdOut = new StdOut(_configuration.EventOutputStream);
                 else
                     StdOut = new StdOut(EventOutputStreams.None);
+
+                // ensure path to log file exists
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
+                    EnsurePathExists(_configuration.EventsLogFile);
 
                 // check for the existence of a known runner. If one is specified in the config, and it's currently running then continue
                 if (!string.IsNullOrWhiteSpace(_configuration.SupportedRunnerExe))
@@ -50,30 +58,52 @@ namespace NUnit.Extension.TestMonitor
                     }
                 }
 
-                // ensure path to log file exists
-                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
-                    EnsurePathExists(_configuration.EventsLogFile);
-
                 var activationMessage = $"NUnit.Extension.TestMonitor extension activated for run '{RuntimeInfo.Instance.TestRunId}'. EventFormat: '{_configuration.EventFormat}' ProcessInfo: {RuntimeInfo.Instance.ProcessName}|{RuntimeInfo.Instance.ProcessId}|{RuntimeInfo.Instance.ProcessSession}|{RuntimeInfo.Instance.ProcessStartTime}|{RuntimeInfo.Instance.ProcessRuntime}  EntryAssembly:{RuntimeInfo.Instance.EntryAssembly?.FullName} ExecutingAssembly: {RuntimeInfo.Instance.ExecutingAssembly?.FullName}{Environment.NewLine}";
                 StdOut.WriteLine(activationMessage);
 
                 WriteLog(activationMessage);
 
-                _ipcServer = new IpcServer(_configuration, StdOut, RuntimeInfo.Instance.TestRunId);
+                // submit events to Grpc server
+#if GRPC
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.Grpc))
+                {
+                    WriteLog($"|INFO|{nameof(TestMonitorExtension)}|Connecting to Grpc server...{Environment.NewLine}");
+                    _grpcClient = new GrpcClient(_configuration);
+                }
+#endif
+
+                // submit events to IpcServer
                 if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes))
-                    _ipcServer.Start();
+                {
+                    WriteLog($"|INFO|{nameof(TestMonitorExtension)}|Connecting to local Ipc server...{Environment.NewLine}");
+                    _ipcClient = new IpcClient(_configuration);
+                    _ipcClient.Connect((client) =>
+                    {
+                        WriteLog($"|INFO|{nameof(TestMonitorExtension)}|Connected to local Ipc server.{Environment.NewLine}");
+                    }, (client) =>
+                    {
+                        WriteLog($"|WARN|{nameof(TestMonitorExtension)}|Failed to connect to local Ipc server!{Environment.NewLine}");
+                    });
+                }
             }
             catch (Exception ex)
             {
-                WriteLog($"|ERROR|{nameof(TestMonitorExtension)}|{ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
+                if (_configuration != null)
+                    WriteLog($"|ERROR|{nameof(TestMonitorExtension)}|{ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
+                throw new ExtensionException($"Fatal exception: {ex.GetBaseException().Message}|{ex.StackTrace}");
             }
         }
 
         public void OnTestEvent(string report)
         {
-            // if no ipc server exists, ignore incoming messages
-            if (_ipcServer == null)
+            // if not sending events anywhere, ignore incoming messages
+#if GRPC
+            if (_ipcClient == null && _grpcClient == null)
                 return;
+#else
+            if (_ipcClient == null)
+                return;
+#endif
             try
             {
                 // StdOut.WriteLine($"Test event: {report}");
@@ -611,14 +641,14 @@ namespace NUnit.Extension.TestMonitor
                 }
 
                 // emit serialized data over IPC/Named pipes
-                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes) && _ipcServer != null)
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.NamedPipes) && _ipcClient != null)
                 {
                     try
                     {
                         if (serializedBytes != null)
-                            _ipcServer.Write(serializedBytes, 0, serializedBytes.Length);
+                            _ipcClient.Write(serializedBytes, 0, serializedBytes.Length);
                         else if (!string.IsNullOrEmpty(serializedString))
-                            _ipcServer.Write(serializedString);
+                            _ipcClient.Write(serializedString);
                     }
                     catch (IOException ex)
                     {
@@ -626,6 +656,21 @@ namespace NUnit.Extension.TestMonitor
                         WriteLog($"|ERROR|{nameof(WriteEvent)}|Error writing to named pipe: {ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
                     }
                 }
+#if GRPC
+                if (_configuration.EventEmitType.HasFlag(EventEmitTypes.Grpc) && _grpcClient != null)
+                {
+                    try
+                    {
+                        _grpcClient.WriteTestEvent(serializedString);
+                    }
+                    catch (Exception ex)
+                    {
+                        StdOut.WriteLine($"Error writing to Grpc server: {ex.GetBaseException().Message}. StackTrace: {ex.StackTrace}");
+                        WriteLog($"|ERROR|{nameof(WriteEvent)}|Error writing to Grpc server: {ex.GetBaseException().Message}|{ex.StackTrace}{Environment.NewLine}");
+                    }
+                }
+#endif
+
                 // also log data to file if configured
                 if (serializedBytes != null)
                     WriteLog(serializedBytes, dataEvent);
@@ -683,6 +728,11 @@ namespace NUnit.Extension.TestMonitor
 
         private void WriteLog(string text)
         {
+            if (_configuration == null)
+            {
+                throw new ArgumentNullException($"{nameof(_configuration)} is null!");
+            }
+
             if (_configuration.EventEmitType.HasFlag(EventEmitTypes.LogFile) && !string.IsNullOrEmpty(_configuration.EventsLogFile))
             {
                 File.AppendAllText(_configuration.EventsLogFile, $"[{DateTime.Now}][{text.Length}]|{text}");
@@ -743,7 +793,7 @@ namespace NUnit.Extension.TestMonitor
                     _lock?.Wait();
                     try
                     {
-                        _ipcServer?.Dispose();
+                        _ipcClient?.Dispose();
                     }
                     finally
                     {

@@ -4,13 +4,18 @@ namespace NUnit.Extension.TestMonitor
 {
     public class Configuration
     {
-        public const int DefaultNamedPipesConnectionTimeoutMilliseconds = 5000;
+        public const int DefaultNamedPipesConnectionTimeoutMilliseconds = 2000;
+
+        /// <summary>
+        /// Port number to send test events to
+        /// </summary>
+        public int Port { get;set;} = 35001;
 
         /// <summary>
         /// The events to emit
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public EventEmitTypes EventEmitType { get; set; } = EventEmitTypes.NamedPipes | EventEmitTypes.StdOut | EventEmitTypes.LogFile;
+        public EventEmitTypes EventEmitType { get; set; } = EventEmitTypes.Grpc | EventEmitTypes.StdOut;
 
         /// <summary>
         /// The format of the event data
@@ -30,7 +35,7 @@ namespace NUnit.Extension.TestMonitor
         /// <summary>
         /// The timeout (in seconds) to wait for a Named Pipe client connection
         /// </summary>
-        public int NamedPipesConnectionTimeoutSeconds { get; set; } = DefaultNamedPipesConnectionTimeoutMilliseconds;
+        public int NamedPipesConnectionTimeoutMilliseconds { get; set; } = DefaultNamedPipesConnectionTimeoutMilliseconds;
 
         /// <summary>
         /// Specify which launchers the extension will work for.
